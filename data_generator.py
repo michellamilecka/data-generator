@@ -26,7 +26,7 @@ possible_types_of_zdarzenia = [
     "identity theft"
 ]
 
-possible_ways_of_zdarzenie=["personally", "by phone"]
+possible_ways_of_zdarzenie=["in person", "by phone"]
 
 possible_places_of_przesluchanie=["police station", "the house of the interrogated person","area"]
 
