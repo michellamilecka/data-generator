@@ -138,9 +138,30 @@ def generate_weryfikacjaInformacji_data(num_of_weryfikacjaInformacji, czynnosci_
         weryfikacjaInformacji_tablica.append(id_weryfikacjiInformacji, priorytet, opis, wynik, rodzaj)
     return weryfikacjaInformacji_tablica
 
+def generate_ogledzinyMiejscaZdarzenia_data(num_of_ogledzinyMiejscaZdarzenia, czynnosci_tablica):
+    ogledzinyMiejscaZdarzenia_tablica = []
+    for i in range(num_of_ogledzinyMiejscaZdarzenia):
+        # id_ogledzinMiejscaZdarzenia = uzaleznic od pozostalych czynnosci
+        godzina = fake.time() # zastanowic sie czy nie dodac ze musi byc pozniej niz godzina zdarzenia i 
+        adres = fake.address() # zostawiac tak czy pobierac miejsce zdarzenia
+        # przebieg = opisowka...
+        ogledzinyMiejscaZdarzenia_tablica.append(id_ogledzinMiejscaZdarzenia, godzina, adres, przebieg)
+    return ogledzinyMiejscaZdarzenia_tablica
+
+def generate_materialDowodowy_data(num_of_materialDowodowy, czynnosci_tablica):
+    materialDowodowy_tablica = []
+    # zastanawia mnie jak tu bedzie pozniej wiadomo dla ktorego sledztwa jakie sa materialy dowodowe bo to jest w tej osobnej tablicy w bazie danych
+    for i in range(num_of_materialDowodowy):
+        ID_materialuDowodowego = i
+        # ID_czynnosci = ... i to sie przyda do append
+        # dataZebrania = czynnosci_tablica I TU TRZEBA WYBRAC LOSOWO TE ID KTORE SA JAKO OGLEDZINY MIEJSCA ZDARZENIA LUB PRZESLUCHANIE
+        # miejsceZebrania = czynnosci_tablica, w zaleznosci od id tej czynnosci pobierzemy tez adres czyli przesluchanie to atrybut nr 3, a dla ogledzin atrybut nr 3
+        # raport = opisowka...
+        rodzaj = random.choice(possible_type_od_material) #ale tu tez trzeba uwzglednic ze jak trafi sie przesluchanie to moze byc tylko opcja zeznanie
+        materialDowodowy_tablica.append(ID_materialuDowodowego, dataZebrania, miejsceZebrania, raport, rodzaj, ID_czynnosci)
+
 
 zdarzenia=generate_zdarzenie_data_later(10)
 analizy=generate_analiza_data(10)
 zgloszenia=generate_zgloszenia_data(20,zdarzenia,analizy)
 print(zgloszenia)
-
