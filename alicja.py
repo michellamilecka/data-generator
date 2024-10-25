@@ -54,7 +54,7 @@ Base = declarative_base()
 # class Zdarzenie(Base):
 #     __tablename__ = 'incidents'
 
-#     ID_Zdarzenia = Column(Integer, primary_key=True, autoincrement=True)
+#     ID_zdarzenia = Column(Integer, primary_key=True, autoincrement=True)
 #     dataZdarzenia = Column(Date, nullable=False)
 #     rodzaj = Column(Enum(RodzajZdarzenia), nullable=False)
 #     opis = Column(NVARCHAR(1500), nullable=False)
@@ -173,3 +173,40 @@ class Przesluchanie(Czynnosc):
 #     godzina = Column(DateTime, nullable=False)
 #     adres = Column(NVARCHAR(50), nullable=False)
 #     przebieg = Column(NVARCHAR(1500), nullable=False)
+
+class ZwiazanyZ(Base):
+    __tablename__ = 'connected with'
+
+    ID_materialuDowodowego = Column(Integer, ForeignKey('czynnosci.ID_czynnosci'), primary_key=True)
+    numerSledztwa = Column(Integer, ForeignKey('sledztwa.numerSledztwa'), primary_key=True)
+
+
+class PrzeprowadzonaWRamachAnalizy(Base):
+    __tablename__ = 'carried out bc of analysis'
+
+    ID_analizyZgloszenia = Column(Integer, ForeignKey('analysis of reports.ID_analizyZgloszenia'), primary_key=True)
+    ID_czynnosci = Column(Integer, ForeignKey('czynnosci.ID_czynnosci'), primary_key=False)
+
+class PrzeprowadzonaWRamachSledztwa(Base):
+    __tablename__ = 'carried out bc of investigation'
+
+    numerSledztwa = Column(Integer, ForeignKey('sledztwa.numerSledztwa'), primary_key=True)
+    ID_czynnosci = Column(Integer, ForeignKey('czynnosci.ID_czynnosci'), primary_key=False)
+
+class RozpoczeteNaPodstawie(Base):
+    __tablename__ = 'started because'
+
+    numerSledztwa = Column(Integer, ForeignKey('sledztwa.numerSledztwa'), primary_key=True)
+    ID_analizyZgloszenia = Column(Integer, ForeignKey('analysis of reports.ID_analizyZgloszenia'), primary_key=False)
+
+class SledztwoDotyczy(Base):
+    __tablename__ = 'investigation concerns'
+
+    numerSledztwa = Column(Integer, ForeignKey('sledztwa.numerSledztwa'), primary_key=True)
+    ID_zdarzenia = Column(Integer, ForeignKey('incidents.ID_zdarzenia'), primary_key=False)
+
+class ZabezpieczonyWTrakcie(Base):
+    __tablename__ = 'collected while'
+
+    ID_czynnosci = Column(Integer, ForeignKey('czynnosci.ID_czynnosci'), primary_key=True)
+    ID_materialuDowodowego = Column(Integer, ForeignKey('evidence.ID_materialuDowodowego'), primary_key=False)
