@@ -10,6 +10,18 @@ chief_names=[]
 for i in range(1,number_of_stations+1):
     chief_names.append((i, fake.name()))
 
+
+def generate_possible_types_of_something(possible_types_of_something):
+    types_of_zdarzenia_something = []
+
+    for i, sth in enumerate(possible_types_of_something):
+        types_of_zdarzenia_something.append({
+            "id": i,
+            "name": sth
+        })
+    
+    return types_of_zdarzenia_something
+
 possible_types_of_zdarzenia = [
     "theft", 
     "kidnapping", 
@@ -256,6 +268,17 @@ def generate_zabezpieczony_w_trakcie_data(materialy_dane,czynnosci_dane):
     return zabezpieczony_w_trakcie_tablica
 
         
+# generowanie mozliwych opcji dla "enumow"
+
+typy_zdarzen = generate_possible_types_of_something(possible_types_of_zdarzenia)
+sposoby_zgloszenia = generate_possible_types_of_something(possible_ways_of_zdarzenie)
+miejsca_przesluchania = generate_possible_types_of_something(possible_places_of_przesluchanie)
+powody_przesluchania = generate_possible_types_of_something(possible_purpose_of_hearing)
+statusy_sledztwa = generate_possible_types_of_something(possible_status_of_sledztwo)
+typy_materialow_dowodowych = generate_possible_types_of_something(possible_type_od_material)
+typy_priorytetow = generate_possible_types_of_something(possible_priorities)
+wyniki_weryfikacji = generate_possible_types_of_something(possible_outcome_of_verification)
+sposoby_weryfikacji = generate_possible_types_of_something(possible_way_of_verification)
 
 
 zdarzenia=generate_zdarzenie_data_later(10)
@@ -278,4 +301,3 @@ weryfikacjaInformacji = generate_weryfikacjaInformacji_data(num_of_weryfikacjaIn
 ogledzinyMiejscaZdarzenia = generate_ogledzinyMiejscaZdarzenia_data(num_of_ogledzinyMiejscaZdarzenia, czynnosci_copy)
 # at this point czynnosci_copy powinna byc pusta
 # teraz jak sie losuje material dowodowy to tylko dla przesluchania i ogledzin miejsca zdarzenia, wiec damy obie te tablice do generowania materialu dowodowego
-
