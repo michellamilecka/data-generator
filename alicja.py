@@ -5,10 +5,6 @@ from sqlalchemy.orm import relationship
 import pyodbc
 import enum
 
-# dodac michelli komentarze żeby:
-# 1. zmieniła sposob zgloszenia 'in person'
-# 2. usunela z rodzajow zdarzen 'manslaughter'
-
 # TO DO
 # 1. ogarnac dziedziczenie po 'is a'
 # 2. polaczyc sie z baza danych
@@ -36,7 +32,10 @@ class Zgloszenie(Base):
     ID_Posterunku = Column(Integer, nullable=False)
     ID_Osoby = Column(Integer, nullable=False)
     numerOdznaki = Column(Integer, nullable=False)
-    # relacja do SposobZgloszenia
+    #foreign keys
+    ID_zdarzenia = Column(Integer, ForeignKey('incidents.ID_zdarzenia'), primary_key=False)
+    ID_analizyZgloszenia = Column(Integer, ForeignKey('analysis_of_reports.ID_analizyZgloszenia'), primary_key=False)
+    # relacja
     sposob = relationship("SposobZgloszenia", back_populates="zgloszenia")
 
 class RodzajZdarzenia(Base):
@@ -56,6 +55,9 @@ class Zdarzenie(Base):
     opis = Column(NVARCHAR(1500), nullable=False)
     godzina = Column(DateTime, nullable=False)
     adres = Column(NVARCHAR(50), nullable=False)
+    #foreign keys
+    numerSledztwa = Column(Integer, ForeignKey('investigations.numerSledztwa'), primary_key=False)
+    # relacja
     rodzaj = relationship("RodzajZdarzenia", back_populates="zdarzenia")
 
 
@@ -66,6 +68,9 @@ class AnalizaZgloszenia(Base):
     rozpoczecieSledztwa = Column(Boolean, nullable=False)
     #tu dodatkowa tabela raczej bedzie ale narazie dam nvarchar
     podstawy = Column(NVARCHAR(200), nullable=False)
+    # foreign keys
+    numerSledztwa = Column(Integer, ForeignKey('investigations.numerSledztwa'), primary_key=False)
+    # relacja
     czynnosci = relationship("PrzeprowadzonaWRamachAnalizy", back_populates="analiza")
 
 
@@ -106,6 +111,10 @@ class MaterialDowodowy(Base):
     miejsceZebrania = Column(NVARCHAR(50), nullable=False)
     raport = Column(NVARCHAR(600), nullable=False)
     ID_rodzajuMaterialuDowodowego = Column(Integer, ForeignKey('type_of_evidence.ID_rodzajuMaterialuDowodowego'), nullable=False)
+    # foreign keys
+    ID_czynnosci = Column(Integer, ForeignKey('operations.ID_czynnosci'), primary_key=False)
+
+    # relacja
     rodzaj = relationship("RodzajMaterialuDowodowego", back_populates="materialy")
 
 
@@ -116,6 +125,9 @@ class Czynnosc(Base):
     dataWykonania = Column(Date, nullable=False)
     dataZakonczenia = Column(Date, nullable=False)
     numerOdznaki = Column(Integer, nullable=False)
+    # foreign keys
+    ID_analizyZgloszenia = Column(Integer, ForeignKey('analysis_of_reports.ID_analizyZgloszenia'), primary_key=False)
+    numerSledztwa = Column(Integer, ForeignKey('investigations.numerSledztwa'), primary_key=False)
 
     # A polymorphic identity that identifies this class in the inheritance chain
     __mapper_args__ = {
@@ -198,51 +210,51 @@ class ZwiazanyZ(Base):
     dowod = relationship("MaterialDowodowy", backref="connected_with")
 
 
-class PrzeprowadzonaWRamachAnalizy(Base):
-    __tablename__ = 'carried_out_bc_of_analysis'
+# class PrzeprowadzonaWRamachAnalizy(Base):
+#     __tablename__ = 'carried_out_bc_of_analysis'
 
-    ID_analizyZgloszenia = Column(Integer, ForeignKey('analysis_of_reports.ID_analizyZgloszenia'), primary_key=True)
-    ID_czynnosci = Column(Integer, ForeignKey('operations.ID_czynnosci'), primary_key=False)
+#     ID_analizyZgloszenia = Column(Integer, ForeignKey('analysis_of_reports.ID_analizyZgloszenia'), primary_key=True)
+#     ID_czynnosci = Column(Integer, ForeignKey('operations.ID_czynnosci'), primary_key=False)
     
-    analiza = relationship("AnalizaZgloszenia", back_populates="czynnosci")
-    czynnosc = relationship("Czynnosc", backref="analysis_related")
+#     analiza = relationship("AnalizaZgloszenia", back_populates="czynnosci")
+#     czynnosc = relationship("Czynnosc", backref="analysis_related")
 
 
-class PrzeprowadzonaWRamachSledztwa(Base):
-    __tablename__ = 'carried_out_bc_of_investigation'
+# class PrzeprowadzonaWRamachSledztwa(Base):
+#     __tablename__ = 'carried_out_bc_of_investigation'
 
-    numerSledztwa = Column(Integer, ForeignKey('investigations.numerSledztwa'), primary_key=True)
-    ID_czynnosci = Column(Integer, ForeignKey('operations.ID_czynnosci'), primary_key=False)
+#     numerSledztwa = Column(Integer, ForeignKey('investigations.numerSledztwa'), primary_key=True)
+#     ID_czynnosci = Column(Integer, ForeignKey('operations.ID_czynnosci'), primary_key=False)
 
-    sledztwo = relationship("Sledztwo", backref="investigation_related")
-    czynnosc = relationship("Czynnosc", backref="investigation_conducted")
-
-
-class RozpoczeteNaPodstawie(Base):
-    __tablename__ = 'started_based_on'
-
-    numerSledztwa = Column(Integer, ForeignKey('investigations.numerSledztwa'), primary_key=True)
-    ID_analizyZgloszenia = Column(Integer, ForeignKey('analysis_of_reports.ID_analizyZgloszenia'), primary_key=False)
-
-    sledztwo = relationship("Sledztwo", backref="started_based_on")
-    analiza = relationship("AnalizaZgloszenia", backref="basis_for_investigation")
+#     sledztwo = relationship("Sledztwo", backref="investigation_related")
+#     czynnosc = relationship("Czynnosc", backref="investigation_conducted")
 
 
-class SledztwoDotyczy(Base):
-    __tablename__ = 'investigation_concerns'
+# class RozpoczeteNaPodstawie(Base):
+#     __tablename__ = 'started_based_on'
 
-    numerSledztwa = Column(Integer, ForeignKey('investigations.numerSledztwa'), primary_key=True)
-    ID_zdarzenia = Column(Integer, ForeignKey('incidents.ID_zdarzenia'), primary_key=False)
+#     numerSledztwa = Column(Integer, ForeignKey('investigations.numerSledztwa'), primary_key=True)
+#     ID_analizyZgloszenia = Column(Integer, ForeignKey('analysis_of_reports.ID_analizyZgloszenia'), primary_key=False)
+
+#     sledztwo = relationship("Sledztwo", backref="started_based_on")
+#     analiza = relationship("AnalizaZgloszenia", backref="basis_for_investigation")
+
+
+# class SledztwoDotyczy(Base):
+#     __tablename__ = 'investigation_concerns'
+
+#     numerSledztwa = Column(Integer, ForeignKey('investigations.numerSledztwa'), primary_key=True)
+#     ID_zdarzenia = Column(Integer, ForeignKey('incidents.ID_zdarzenia'), primary_key=False)
     
-    zdarzenie = relationship("Zdarzenie", backref="related_investigations")
-    sledztwo = relationship("Sledztwo", backref="concerned_events")
+#     zdarzenie = relationship("Zdarzenie", backref="related_investigations")
+#     sledztwo = relationship("Sledztwo", backref="concerned_events")
 
 
-class ZabezpieczonyWTrakcie(Base):
-    __tablename__ = 'collected_while'
+# class ZabezpieczonyWTrakcie(Base):
+#     __tablename__ = 'collected_while'
 
-    ID_czynnosci = Column(Integer, ForeignKey('operations.ID_czynnosci'), primary_key=True)
-    ID_materialuDowodowego = Column(Integer, ForeignKey('evidence.ID_materialuDowodowego'), primary_key=False)
+#     ID_czynnosci = Column(Integer, ForeignKey('operations.ID_czynnosci'), primary_key=True)
+#     ID_materialuDowodowego = Column(Integer, ForeignKey('evidence.ID_materialuDowodowego'), primary_key=False)
 
-    czynnosc = relationship("Czynnosc", backref="secured_during")
-    dowod = relationship("MaterialDowodowy", backref="secured_in_action")
+#     czynnosc = relationship("Czynnosc", backref="secured_during")
+#     dowod = relationship("MaterialDowodowy", backref="secured_in_action")
