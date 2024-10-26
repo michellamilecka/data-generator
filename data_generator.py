@@ -91,19 +91,22 @@ def generate_zgloszenia_data(num_of_zgloszenia,zdarzenia_data,analizy_tablica):
         #id_posterunku
         numer_odznaki=random.randint(10000, 99999)
         id_analizy=random.randint(0,len(analizy_tablica)-1)
-        zgloszenia_tablica.append((zgloszenie_id,zgloszenie_sposob,zgloszenie_data,id_zdarzenia,id_analizy))
+        zgloszenia_tablica.append((zgloszenie_id,zgloszenie_sposob,zgloszenie_data,id_zdarzenia,id_osoby,id_posterunku,numer_odznaki,id_analizy))
     return zgloszenia_tablica
 
 
 def generate_sledztwo_data(num_of_sledztwa):
     sledztwa_tablica=[]
+    ##tu tez sie pozbylam doatkowej tabeli
+    yes_analizy = [analiza for analiza in analiza_data if analiza[1] == "yes"]
     for i in range(sledztwa_tablica):
         numer_sledztwa=i
+        id_analizy=random.randint(0, len(analiza_data)-1)
         #data_ropoczecia
         #data_zakoczenia
         status_sledztwa=random.choice(possible_status_of_sledztwo)
         numer_odznaki=random.randint(10000, 99999)
-        sledztwa_tablica.append((numer_sledztwa,status_sledztwa,numer_odznaki))
+        sledztwa_tablica.append((numer_sledztwa,data_rozp,data_zako,status_sledztwa,id_analizy,numer_odznaki))
     return sledztwa_tablica
 
 def generate_czynnosc_data(num_of_czynnosci):
@@ -112,7 +115,7 @@ def generate_czynnosc_data(num_of_czynnosci):
         id_czynnosci = i
         # data = 
         numerOdznaki = random.randint(10000, 99999)
-        czynnosci_tablica.append(id_czynnosci,numerOdznaki)
+        czynnosci_tablica.append(id_czynnosci,data,numerOdznaki)
     return czynnosci_tablica
 
 def generate_przesluchanie_data(num_przesluchanie,czynnosci_tablica):
@@ -213,6 +216,44 @@ def generate_materialDowodowy_data(num_of_materialDowodowy, przesluchania, ogled
         pozostala_num_of_dowody -= 1
     
     return materialDowodowy_tablica
+
+def generate_zwiazany_z_data(sledztwa_dane,material_dowodowy_dane):
+    zwiazany_z_tablica=[]
+    for numer_sledztwa, _, _,_,_,_ in sledztwa_dane:
+    # Randomly determine the number of metairly dowodowe dla danego sledztwa
+        num_materialy = 0  # Initialize as 0 by default
+
+        # Randomly select the number of metairly based on specified probabilities
+        probability = random.random()
+        if probability <= 0.5:
+            num_materialy = 0  # 50% chance of no mateiraly
+        elif probability <= 0.7:
+            num_materialy = 1  # 20% chance of one mateiral
+        elif probability <= 0.85:
+            num_materialy = 2  # 15% chance of two materialy
+        elif probability <= 0.95:
+            num_materialy = 3  # 10% chance of three materialy
+        elif probability <= 0.99:
+            num_materialy = 4  # 5% chance of four materialy
+        else:
+            num_materialy = 5  # 1% chance of five materialy
+
+        # Randomly select mateiraly
+        materialy_dowodowe=  random.sample(material_dowodowy_dane, num_materialy)
+        # Create records 
+        for id_materialu, _, _, _, _, _ in materialy_dowodowe:
+            zwiazany_z_tablica.append((numer_sledztwa, id_materialu))
+    return zwiazany_z_tablica
+
+#zostaw ta funkcje jesli faktycznie bedzie dodatkowa encja a jesli nie to odkomentuj w generate_materail linijke z id_czynnosci
+def generate_zabezpieczony_w_trakcie_data(materialy_dane,czynnosci_dane):
+    zabezpieczony_w_trakcie_tablica=[]
+    #przypisujemy dla kazdego materialu czynnosc przy ktorej zostal zabeczpiecozny
+    for i in range(len(materialy_dane)):
+        id_czynnosci=random.randint(0, len(czynnosci_dane)-1)
+        id_materialu=i
+        zabezpieczony_w_trakcie_tablica.append((id_czynnosci,id_materialu))
+    return zabezpieczony_w_trakcie_tablica
 
         
 
