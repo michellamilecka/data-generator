@@ -110,7 +110,7 @@ def generate_czynnosc_data(num_of_czynnosci):
     czynnosci_tablica = []
     for i in range(num_of_czynnosci):
         id_czynnosci = i
-        #data = 
+        # data = 
         numerOdznaki = random.randint(10000, 99999)
         czynnosci_tablica.append(id_czynnosci,numerOdznaki)
     return czynnosci_tablica
@@ -118,18 +118,23 @@ def generate_czynnosc_data(num_of_czynnosci):
 def generate_przesluchanie_data(num_przesluchanie,czynnosci_tablica):
     przesluchania_tablica=[]
     for i in range(przesluchania_tablica):
-        #id_czynnosci
+        #losowanie krotki i jej usuniecie z tablicy
+        wylosowana_czynnosc = czynnosci_tablica.pop(random.randrange(len(czynnosci_tablica)))
+        id_czynnosci= wylosowana_czynnosc[0]
+
         godzina_przesluchania=fake.time()
         lokalizacja_przesluchania=random.choice(possible_places_of_przesluchanie)
         cel_przeslchania=random.choice(possible_purpose_of_hearing)
         #id_osoby
-        przesluchania_tablica.append(godzina_przesluchania,lokalizacja_przesluchania,cel_przeslchania)
+        przesluchania_tablica.append(id_czynnosci, godzina_przesluchania,lokalizacja_przesluchania,cel_przeslchania)
     return przesluchania_tablica
 
 def generate_weryfikacjaInformacji_data(num_of_weryfikacjaInformacji, czynnosci_tablica):
     weryfikacjaInformacji_tablica = []
     for i in range(num_of_weryfikacjaInformacji):
-        # id_weryfikacjiInformacji = tu trzeba bedzie wybierac liczbe czynnosci i potem rozdzielic to dobrze na pozostale encje wchodzace w sklad czynnosc
+        #losowanie krotki i jej usuniecie z tablicy
+        wylosowana_czynnosc = czynnosci_tablica.pop(random.randrange(len(czynnosci_tablica)))
+        id_weryfikacjiInformacji = wylosowana_czynnosc[0]
         # a pozniej bedziemy generowac np 1. przesluhcanie i tam bedziemy wyrzucac z tablicy juz te id ktore zostaly wykrozystane i przekazywac do weryfikacji informacji itd 
         priorytet = random.choice(possible_priorities)
         # opis ?????
@@ -141,27 +146,95 @@ def generate_weryfikacjaInformacji_data(num_of_weryfikacjaInformacji, czynnosci_
 def generate_ogledzinyMiejscaZdarzenia_data(num_of_ogledzinyMiejscaZdarzenia, czynnosci_tablica):
     ogledzinyMiejscaZdarzenia_tablica = []
     for i in range(num_of_ogledzinyMiejscaZdarzenia):
-        # id_ogledzinMiejscaZdarzenia = uzaleznic od pozostalych czynnosci
+        #losowanie krotki i jej usuniecie z tablicy
+        wylosowana_czynnosc = czynnosci_tablica.pop(random.randrange(len(czynnosci_tablica)))
+        id_ogledzinMiejscaZdarzenia = wylosowana_czynnosc[0]
         godzina = fake.time() # zastanowic sie czy nie dodac ze musi byc pozniej niz godzina zdarzenia i 
         adres = fake.address() # zostawiac tak czy pobierac miejsce zdarzenia
         # przebieg = opisowka...
         ogledzinyMiejscaZdarzenia_tablica.append(id_ogledzinMiejscaZdarzenia, godzina, adres, przebieg)
     return ogledzinyMiejscaZdarzenia_tablica
 
-def generate_materialDowodowy_data(num_of_materialDowodowy, czynnosci_tablica):
+# funckcja pomocna w trakcie tworzenia materialow dowodowych zeby szybciej znalezc o ktorej czynnosci mowa, zeby moc przypisac jej dateZebrania
+def znajdz_czynnosc_po_id(czynnosci_tablica, szukane_id):
+    for czynnosc in czynnosci_tablica:
+        if czynnosc[0] == szukane_id:
+            return czynnosc
+    return None
+
+
+# najpierw przypisujemy KAZDEMU przesluchaniu dowod z rodzajem "zeznanie",a pozniej dla pozostalej liczby dowodow przypisujemy do ogledzin
+def generate_materialDowodowy_data(num_of_materialDowodowy, przesluchania, ogledzinyMiejscaZdarzenia, czynnosci_tablica):
     materialDowodowy_tablica = []
+    total_num_of_przesluchania = len(przesluchania)
     # zastanawia mnie jak tu bedzie pozniej wiadomo dla ktorego sledztwa jakie sa materialy dowodowe bo to jest w tej osobnej tablicy w bazie danych
-    for i in range(num_of_materialDowodowy):
+    
+    for i, przesluchanie in enumerate(przesluchania):
         ID_materialuDowodowego = i
-        # ID_czynnosci = ... i to sie przyda do append
-        # dataZebrania = czynnosci_tablica I TU TRZEBA WYBRAC LOSOWO TE ID KTORE SA JAKO OGLEDZINY MIEJSCA ZDARZENIA LUB PRZESLUCHANIE
-        # miejsceZebrania = czynnosci_tablica, w zaleznosci od id tej czynnosci pobierzemy tez adres czyli przesluchanie to atrybut nr 3, a dla ogledzin atrybut nr 3
-        # raport = opisowka...
-        rodzaj = random.choice(possible_type_od_material) #ale tu tez trzeba uwzglednic ze jak trafi sie przesluchanie to moze byc tylko opcja zeznanie
+        ID_czynnosci = przesluchanie[0]
+
+        #szukamy ktorej czynnosci odpowiada dane przesluchanie
+        czynnosc = znajdz_czynnosc_po_id(czynnosci_tablica,ID_czynnosci)
+
+        if czynnosc:
+            dataZebrania = czynnosc[1]
+        else:
+            continue
+
+
+        miejsceZebrania = przesluchanie[1]
+        rodzaj = "zeznanie"
+        # raport = ...
         materialDowodowy_tablica.append(ID_materialuDowodowego, dataZebrania, miejsceZebrania, raport, rodzaj, ID_czynnosci)
+    
+    pozostala_num_of_dowody = num_of_materialDowodowy - total_num_of_przesluchania
+    
+    
+    
+    #jesli nadal są dostępne dowody, przypisujemy je do oględzin do tego momentu az bedzie ich 0
+    while pozostala_num_of_dowody > 0:
+        ogledziny = random.choice(ogledzinyMiejscaZdarzenia)
+        ID_materialuDowodowego = len(materialDowodowy_tablica)  #indeks nowego materiału dowodowego
+        ID_czynnosci = ogledziny[0]
+
+        #szukamy ktorej czynnosci odpowiadaja dane ogledziny
+        czynnosc = znajdz_czynnosc_po_id(czynnosci_tablica,ID_czynnosci)
+
+        if czynnosc:
+            dataZebrania = czynnosc[1]
+        else:
+            continue
+
+        miejsceZebrania = ogledziny[2]
+        # uwzgledniamy ze mozliwosci dla ogledzin sa wszystkie z wyjatkiem zeznania
+        rodzaj = random.choice([typ for typ in possible_type_od_material if typ != "zeznanie"])
+        # raport = ...
+        materialDowodowy_tablica.append(ID_materialuDowodowego, dataZebrania, miejsceZebrania, raport, rodzaj, ID_czynnosci)
+        pozostala_num_of_dowody -= 1
+    
+    return materialDowodowy_tablica
+
+        
 
 
 zdarzenia=generate_zdarzenie_data_later(10)
 analizy=generate_analiza_data(10)
 zgloszenia=generate_zgloszenia_data(20,zdarzenia,analizy)
 print(zgloszenia)
+
+# liczba czynnosci musi byc podzielna przez 3 to po rowno rozdzielimy sobie te czynnosci po isa
+# zalozmy ze liczba czynnosci to bedzie 40 002 (wiem, ze musi byc wiecej ale narazie tak zakladamy)
+# 3 mozna zrobic jako zmienna
+num_of_czynnosci = 40002
+num_of_przesluchanie = num_of_czynnosci/3
+num_of_weryfikacjaInformacji = num_of_czynnosci/3
+num_of_ogledzinyMiejscaZdarzenia = num_of_czynnosci/3
+
+czynnosci = generate_czynnosc_data(num_of_czynnosci)
+czynnosci_copy = czynnosci
+przesluchania = generate_przesluchanie_data(num_of_przesluchanie,czynnosci_copy)
+weryfikacjaInformacji = generate_weryfikacjaInformacji_data(num_of_weryfikacjaInformacji, czynnosci_copy)
+ogledzinyMiejscaZdarzenia = generate_ogledzinyMiejscaZdarzenia_data(num_of_ogledzinyMiejscaZdarzenia, czynnosci_copy)
+# at this point czynnosci_copy powinna byc pusta
+# teraz jak sie losuje material dowodowy to tylko dla przesluchania i ogledzin miejsca zdarzenia, wiec damy obie te tablice do generowania materialu dowodowego
+
