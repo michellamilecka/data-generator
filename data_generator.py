@@ -2,6 +2,8 @@ from faker import Faker
 import random
 import pandas as pd
 import csv
+from datetime import timedelta, datetime
+
 fake=Faker()
 number_of_stations=30
 #liczba to id posterunku 
@@ -63,8 +65,8 @@ def generate_zdarzenie_data(num_of_zdarzenie, typy_zdarzen, sledztwa):
 
 
     for i in range(num_of_zdarzenie):
-        start_date = '-30y'  
-        end_date = '-10y'  
+        start_date = datetime.now() - timedelta(days=365*5) # 5 lat temu  
+        end_date = datetime.now() - timedelta(days=365*2) # 2 lata temu
         ID_zdarzenia=i 
         data_zdarzenia = fake.date_between(start_date=start_date, end_date=end_date)
         ID_rodzajuZdarzenia=random.choice(typy_zdarzen)["id"] # nie mam pewnosci czy to tak zadziala
@@ -87,23 +89,6 @@ def generate_zdarzenie_data(num_of_zdarzenie, typy_zdarzen, sledztwa):
         zdarzenia_tablica.append((ID_zdarzenia, data_zdarzenia, ID_rodzajuZdarzenia, opis_zdarzenia, godzina_zdarzenia, adres_zdarzenia, numer_sledztwa))
     
     return zdarzenia_tablica
-
-
-# def generate_zdarzenie_data_later(num_of_zdarzenie, typy_zdarzen):
-#     zdarzenia_tablica=[]
-#     for i in range(num_of_zdarzenie):
-#         start_date = '-30y'  
-#         end_date = 'today'
-#         ID_zdarzenia=i
-#         data_zdarzenia = fake.date_between(start_date=start_date, end_date=end_date)
-#         ID_rodzajuZdarzenia=random.choice(typy_zdarzen)["id"]   
-#         opis_zdarzenia = fake.text()
-#         godzina_zdarzenia=fake.time()
-#         adres_zdarzenia=fake.address()
-#         # foreign keys
-#         numer_sledztwa =
-#         zdarzenia_tablica.append((ID_zdarzenia, data_zdarzenia, ID_rodzajuZdarzenia, opis_zdarzenia, godzina_zdarzenia, adres_zdarzenia, numer_sledztwa))
-#     return zdarzenia_tablica
 
 def generate_analiza_data(num_of_analizy, sledztwa):
     analizy_tablica=[]
@@ -162,7 +147,7 @@ def generate_zgloszenia_data(num_of_zgloszenia, zdarzenia_data, analizy_tablica,
             id_zdarzenia = random.choice(zdarzenia_data)[0]  # Losowo przypisujemy zdarzenia
 
         data_z = zdarzenia_data[id_zdarzenia][1]  # Data zdarzenia
-        end_date = data_z.replace(year=data_z.year + 8)
+        end_date = data_z + timedelta(days=25)
         zgloszenie_data = fake.date_between(start_date=data_z, end_date=end_date)
         opis = fake.text()
         
@@ -206,42 +191,30 @@ def generate_zgloszenia_data(num_of_zgloszenia, zdarzenia_data, analizy_tablica,
 
     return zgloszenia_tablica
 
-# def generate_zgloszenia_data(num_of_zgloszenia, zdarzenia_data, analizy_tablica, sposoby_zgloszenia):
-#     zgloszenia_tablica=[]
-
-#     for i in range(num_of_zgloszenia):
-#         numer_zgloszenia=i
-#         ID_sposobuZgloszenia = random.choice(sposoby_zgloszenia)["id"]
-#         data_z=zdarzenia_data[id_zdarzenia][0]
-#         end_date = data_z.replace(year=data_z.year + 8)  
-#         zgloszenie_data = fake.date_between(start_date=data_z, end_date=end_date)
-#         opis = fake.text()
-#         id_posterunku =random.randint(10000, 99999)
-#         id_osoby =random.randint(10000, 99999)
-#         numer_odznaki=random.randint(10000, 99999)
-#         # foreign keys
-#         id_zdarzenia = 
-            
-#         id_analizy =
-
-#         zgloszenia_tablica.append((numer_zgloszenia,ID_sposobuZgloszenia,zgloszenie_data,opis,id_posterunku,id_osoby,numer_odznaki,id_zdarzenia, id_analizy))
-    
-#     return zgloszenia_tablica
-
 
 def generate_sledztwo_data(num_of_sledztwa, statusy_sledztwa):
     sledztwa_tablica=[]
+    start_date = datetime.now() - timedelta(days=365 +10*30) # okolo rok i 10 miesiecy
+    end_date = start_date +timedelta(days=10)
     ##tu tez sie pozbylam doatkowej tabeli
     #yes_analizy = [analiza for analiza in analiza_data if analiza[1] == "yes"]
 
     for i in range(num_of_sledztwa):
         numer_sledztwa=i
-        data_ropoczecia = fake.date()
-        data_zakoczenia = fake.date()
-        ID_statusuSledztwa = random.choice(statusy_sledztwa)["id"]
+        data_rozpoczecia = fake.date_between(start_date=start_date, end_date=end_date)
+        # Logika szans na datę zakończenia
+        if random.random() <= 0.25:  # 25% szans
+            data_zakonczenia = fake.date_between(start_date=data_rozpoczecia + timedelta(days=10), end_date=(datetime.now()-timedelta(days=365)))
+            dostepne_statusy = [status for status in statusy_sledztwa if status["id"] in [1, 2]]
+        else:
+            data_zakonczenia = None
+            dostepne_statusy = [status for status in statusy_sledztwa if status["id"] in [0, 4]]
+
+        # Wybieramy losowy status z dostępnych
+        ID_statusuSledztwa = random.choice(dostepne_statusy)["id"]
         numer_odznaki=random.randint(10000, 10101)
         
-        sledztwa_tablica.append((numer_sledztwa,data_ropoczecia,data_zakoczenia,ID_statusuSledztwa,numer_odznaki))
+        sledztwa_tablica.append((numer_sledztwa,data_rozpoczecia,data_zakonczenia,ID_statusuSledztwa,numer_odznaki))
     
     return sledztwa_tablica
 
@@ -254,29 +227,79 @@ def generate_czynnosc_data(num_of_czynnosci, analizy_tablica, sledztwa):
 
     for i in range(num_of_czynnosci):
         id_czynnosci = i
-        data = fake.date()
+        #data = fake.date()
         numerOdznaki = random.randint(10000, 10101)
         #foreign keys
         if len(sledztwa_przypisane) < num_of_sledztwa:
             dostepne_sledztwa = [sl for sl in sledztwa if sl[0] not in sledztwa_przypisane]
-            numer_sledztwa = random.choice(dostepne_sledztwa)[0]
+            sledztwo = random.choice(dostepne_sledztwa)
+            numer_sledztwa = sledztwo[0]
             ID_analizyZgloszenia = None
             sledztwa_przypisane.add(numer_sledztwa)
+
+            data_rozpoczecia_sledztwa = sledztwo[1]
+            data_zakonczenia_sledztwa = sledztwo[2]  # może być None
+
+            start_date = data_rozpoczecia_sledztwa
+            if data_zakonczenia_sledztwa:
+                end_date = data_zakonczenia_sledztwa - timedelta(days=1)
+            else:
+                end_date = datetime.now() - timedelta(days=365)  # Do roku wstecz
+
         elif len(analizy_przypisane) < num_of_analizy:
             dostepne_analizy = [an_sl for an_sl in analizy_tablica if an_sl[0] not in analizy_przypisane]
-            ID_analizyZgloszenia = random.choice(dostepne_analizy)[0]
+            analiza = random.choice(dostepne_analizy)
+            ID_analizyZgloszenia = analiza[0]
             numer_sledztwa = None
             analizy_przypisane.add(ID_analizyZgloszenia)
+
+            numer_sledztwa = analiza[3]
+
+            # Ustalanie daty dla czynności związanej z analizą zgłoszenia
+            if numer_sledztwa is not None:
+                # Analiza miała śledztwo
+                data_rozpoczecia_sledztwa = [sl[1] for sl in sledztwa if sl[0] == numer_sledztwa][0]
+                end_date = data_rozpoczecia_sledztwa
+                start_date = end_date - timedelta(days=20)
+            else:
+                # Analiza bez śledztwa, losuj daty rok i 11 miesięcy temu
+                end_date = datetime.now() - timedelta(days=365 + 10*30)  # Rok i 10 miesięcy temu
+                start_date = datetime.now() - timedelta(days=365 + 11*30)  # Rok i 11 miesięcy temu
+
         else:
             if random.random() < 0.5:
                 # Losuj analizę
-                ID_analizyZgloszenia = random.choice(analizy_tablica)[0]
+                analiza = random.choice(analizy_tablica)
+                ID_analizyZgloszenia = analiza[0]
+                numer_sledztwa_pobrany_analiza = analiza[3]
+
+                if numer_sledztwa_pobrany_analiza is not None:
+                    data_rozpoczecia_sledztwa = [sl[1] for sl in sledztwa if sl[0] == numer_sledztwa_pobrany_analiza][0]
+                    end_date = data_rozpoczecia_sledztwa
+                    start_date = end_date - timedelta(days=20)
+                else:
+                    # Analiza bez śledztwa, losuj daty rok i 11 miesięcy temu
+                    end_date = datetime.now() - timedelta(days=365 + 10*30)  # Rok i 10 miesięcy temu
+                    start_date = datetime.now() - timedelta(days=365 + 11*30)  # Rok i 11 miesięcy temu
+
                 numer_sledztwa = None
             else:
                 # Losuj śledztwo
-                numer_sledztwa = random.choice(sledztwa)[0]
-                ID_analizyZgloszenia = None
+                sledztwo = random.choice(sledztwa)
+                numer_sledztwa = sledztwo[0]
+                data_rozpoczecia_sledztwa = sledztwo[1]
+                data_zakonczenia_sledztwa = sledztwo[2]
 
+                # Ustalanie daty dla czynności związanej ze śledztwem
+                start_date = data_rozpoczecia_sledztwa
+                if data_zakonczenia_sledztwa:
+                    end_date = data_zakonczenia_sledztwa - timedelta(days=1)
+                else:
+                    end_date = datetime.now() - timedelta(days=365)  # Do roku wstecz
+
+                ID_analizyZgloszenia = None
+        
+        data = fake.date_between(start_date=start_date, end_date=end_date)
         czynnosci_tablica.append((id_czynnosci,data,numerOdznaki,ID_analizyZgloszenia, numer_sledztwa))
     return czynnosci_tablica
 
@@ -440,51 +463,51 @@ def write_to_csv(data, filename):
         
 # generowanie mozliwych opcji dla "enumow"
 
-# typy_zdarzen = generate_possible_types_of_something(possible_types_of_zdarzenia)
-# sposoby_zgloszenia = generate_possible_types_of_something(possible_ways_of_zdarzenie)
-# miejsca_przesluchania = generate_possible_types_of_something(possible_places_of_przesluchanie)
-# powody_przesluchania = generate_possible_types_of_something(possible_purpose_of_hearing)
-# statusy_sledztwa = generate_possible_types_of_something(possible_status_of_sledztwo)
-# typy_materialow_dowodowych = generate_possible_types_of_something(possible_type_od_material)
-# typy_priorytetow = generate_possible_types_of_something(possible_priorities)
-# wyniki_weryfikacji = generate_possible_types_of_something(possible_outcome_of_verification)
-# sposoby_weryfikacji = generate_possible_types_of_something(possible_way_of_verification)
+typy_zdarzen = generate_possible_types_of_something(possible_types_of_zdarzenia)
+sposoby_zgloszenia = generate_possible_types_of_something(possible_ways_of_zdarzenie)
+miejsca_przesluchania = generate_possible_types_of_something(possible_places_of_przesluchanie)
+powody_przesluchania = generate_possible_types_of_something(possible_purpose_of_hearing)
+statusy_sledztwa = generate_possible_types_of_something(possible_status_of_sledztwo)
+typy_materialow_dowodowych = generate_possible_types_of_something(possible_type_od_material)
+typy_priorytetow = generate_possible_types_of_something(possible_priorities)
+wyniki_weryfikacji = generate_possible_types_of_something(possible_outcome_of_verification)
+sposoby_weryfikacji = generate_possible_types_of_something(possible_way_of_verification)
 
 
 # generowanie danych
 # 1. zdarzen musi byc > niz sledztw
 # 2. analiz musi byc > niz sledztw & musi byc tyle samo lub < co zgłoszeń
 
-# sledztwa = generate_sledztwo_data(10, statusy_sledztwa)
-# zdarzenia = generate_zdarzenie_data(20, typy_zdarzen, sledztwa)
-# analizy_zgloszen = generate_analiza_data(50, sledztwa)
-# czynnosci = generate_czynnosc_data(100, analizy_zgloszen, sledztwa)
+sledztwa = generate_sledztwo_data(10, statusy_sledztwa)
+zdarzenia = generate_zdarzenie_data(20, typy_zdarzen, sledztwa)
+analizy_zgloszen = generate_analiza_data(50, sledztwa)
+czynnosci = generate_czynnosc_data(100, analizy_zgloszen, sledztwa)
 
-# liczba_czynnosci_do_analizy = 0
-# liczba_czynnosci_do_sledztwa = 0
-
-
-# # Iteracja przez czynności, aby policzyć przypisania do analiz i śledztw
-# for czynnosci_item in czynnosci:
-#     ID_analizyZgloszenia = czynnosci_item[3]  # Indeks 2 dla ID analizy
-#     numer_sledztwa = czynnosci_item[4]  # Indeks 4 dla numeru śledztwa
-
-#     if ID_analizyZgloszenia is not None:  # Sprawdzamy, czy przypisano do analizy
-#         liczba_czynnosci_do_analizy += 1
-#     if numer_sledztwa is not None:  # Sprawdzamy, czy przypisano do śledztwa
-#         liczba_czynnosci_do_sledztwa += 1
+liczba_czynnosci_do_analizy = 0
+liczba_czynnosci_do_sledztwa = 0
 
 
+# Iteracja przez czynności, aby policzyć przypisania do analiz i śledztw
+for czynnosci_item in czynnosci:
+    ID_analizyZgloszenia = czynnosci_item[3]  # Indeks 2 dla ID analizy
+    numer_sledztwa = czynnosci_item[4]  # Indeks 4 dla numeru śledztwa
+
+    if ID_analizyZgloszenia is not None:  # Sprawdzamy, czy przypisano do analizy
+        liczba_czynnosci_do_analizy += 1
+    if numer_sledztwa is not None:  # Sprawdzamy, czy przypisano do śledztwa
+        liczba_czynnosci_do_sledztwa += 1
 
 
 
 
-# przesluchania, ileZostajeCzynnosci = generate_przesluchanie_data(liczba_czynnosci_do_sledztwa, czynnosci, powody_przesluchania)
-# ogledzinyMiejscaZdarzenia = generate_ogledzinyMiejscaZdarzenia_data(ileZostajeCzynnosci,czynnosci)
-# weryfikacjeInformacji = generate_weryfikacjaInformacji_data(liczba_czynnosci_do_analizy,czynnosci,typy_priorytetow,wyniki_weryfikacji)
-# meterialyDowodowe = generate_materialDowodowy_data(150, przesluchania, ogledzinyMiejscaZdarzenia, czynnosci, typy_materialow_dowodowych)
 
-# zwiazanyZ = generate_zwiazany_z_data(sledztwa,meterialyDowodowe,czynnosci)
+
+przesluchania, ileZostajeCzynnosci = generate_przesluchanie_data(liczba_czynnosci_do_sledztwa, czynnosci, powody_przesluchania)
+ogledzinyMiejscaZdarzenia = generate_ogledzinyMiejscaZdarzenia_data(ileZostajeCzynnosci,czynnosci)
+weryfikacjeInformacji = generate_weryfikacjaInformacji_data(liczba_czynnosci_do_analizy,czynnosci,typy_priorytetow,wyniki_weryfikacji)
+meterialyDowodowe = generate_materialDowodowy_data(150, przesluchania, ogledzinyMiejscaZdarzenia, czynnosci, typy_materialow_dowodowych)
+
+zwiazanyZ = generate_zwiazany_z_data(sledztwa,meterialyDowodowe,czynnosci)
 
 # tabela_sledztwa=generate_sledztwo_data(100,statusy_sledztwa)
 # write_to_csv(tabela_sledztwa,"sledztwa.csv")
