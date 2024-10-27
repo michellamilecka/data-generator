@@ -54,120 +54,148 @@ possible_outcome_of_verification=["positive","negative","ambiguous"]
 
 possible_way_of_verification=["identity confirmation","confirmation of the existence of the place indicated by reporting person"]
 
-
-def generate_zdarzenie_data(num_of_zdarzenie):
-
+def generate_zdarzenie_data(num_of_zdarzenie, typy_zdarzen):
     zdarzenia_tablica=[]
+    
     for i in range(num_of_zdarzenie):
         start_date = '-30y'  
-        end_date = '-10y'   
+        end_date = '-10y'  
+        ID_zdarzenia=i 
         data_zdarzenia = fake.date_between(start_date=start_date, end_date=end_date)
-        rodzaj_zdarzenia=random.choice(possible_types_of_zdarzenia)
+        ID_rodzajuZdarzenia=random.choice(typy_zdarzen)["id"] # nie mam pewnosci czy to tak zadziala
+        opis_zdarzenia = fake.text() # opisowe, dodac do append
         godzina_zdarzenia=fake.time()
         adres_zdarzenia=fake.address()
-        zdarzenia_id=i
-        zdarzenia_tablica.append((data_zdarzenia,rodzaj_zdarzenia,godzina_zdarzenia,adres_zdarzenia,zdarzenia_id))
+        # foreign key
+        # numer_sledztwa = 
+        zdarzenia_tablica.append((ID_zdarzenia, data_zdarzenia, ID_rodzajuZdarzenia, opis_zdarzenia, godzina_zdarzenia, adres_zdarzenia, numer_sledztwa))
+    
     return zdarzenia_tablica
 
-def generate_zdarzenie_data_later(num_of_zdarzenie):
+
+def generate_zdarzenie_data_later(num_of_zdarzenie, typy_zdarzen):
     zdarzenia_tablica=[]
     for i in range(num_of_zdarzenie):
         start_date = '-30y'  
-        end_date = 'today'   
+        end_date = 'today'
+        ID_zdarzenia=i
         data_zdarzenia = fake.date_between(start_date=start_date, end_date=end_date)
-        rodzaj_zdarzenia=random.choice(possible_types_of_zdarzenia)
+        ID_rodzajuZdarzenia=random.choice(typy_zdarzen)["id"]   
+        opis_zdarzenia = fake.text()
         godzina_zdarzenia=fake.time()
         adres_zdarzenia=fake.address()
-        zdarzenia_id=i
-        zdarzenia_tablica.append((data_zdarzenia,rodzaj_zdarzenia,godzina_zdarzenia,adres_zdarzenia,zdarzenia_id))
+        # foreign keys
+        # numer_sledztwa =
+        zdarzenia_tablica.append((ID_zdarzenia, data_zdarzenia, ID_rodzajuZdarzenia, opis_zdarzenia, godzina_zdarzenia, adres_zdarzenia, numer_sledztwa))
     return zdarzenia_tablica
 
 def generate_analiza_data(num_of_analizy):
     analizy_tablica=[]
+
     for i in range(num_of_analizy):
         analiza_id=i
         analiza_rozpoczecie_sledztwa=random.choice(["yes", "no"])
-        analizy_tablica.append((analiza_id,analiza_rozpoczecie_sledztwa))
+        rozpoczecieSledztwa_value = True if analiza_rozpoczecie_sledztwa == "yes" else False
+        podstawy = fake.text()
+        # foreign keys
+        # numer_sledztwa = 
+        analizy_tablica.append((analiza_id,rozpoczecieSledztwa_value,podstawy, numer_sledztwa))
+        
     return analizy_tablica
 
-def generate_zgloszenia_data(num_of_zgloszenia,zdarzenia_data,analizy_tablica):
+def generate_zgloszenia_data(num_of_zgloszenia,zdarzenia_data,analizy_tablica, sposoby_zgloszenia):
     zgloszenia_tablica=[]
+
     for i in range(num_of_zgloszenia):
-        id_zdarzenia=random.randint(0, len(zdarzenia_data)-1)
-        zgloszenie_id=i
-        zgloszenie_sposob=random.choice(possible_ways_of_zdarzenie)
+        numer_zgloszenia=i
+        ID_sposobuZgloszenia = random.choice(sposoby_zgloszenia)["id"]
         data_z=zdarzenia_data[id_zdarzenia][0]
         end_date = data_z.replace(year=data_z.year + 8)  
         zgloszenie_data = fake.date_between(start_date=data_z, end_date=end_date)
-        #id_osoby
+        opis = fake.text()
         #id_posterunku
+        #id_osoby
         numer_odznaki=random.randint(10000, 99999)
+        # foreign keys
+        id_zdarzenia=random.randint(0, len(zdarzenia_data)-1)
         id_analizy=random.randint(0,len(analizy_tablica)-1)
-        zgloszenia_tablica.append((zgloszenie_id,zgloszenie_sposob,zgloszenie_data,id_zdarzenia,id_osoby,id_posterunku,numer_odznaki,id_analizy))
+
+        zgloszenia_tablica.append((numer_zgloszenia,ID_sposobuZgloszenia,zgloszenie_data,opis,id_posterunku,id_osoby,numer_odznaki,id_zdarzenia, id_analizy))
+    
     return zgloszenia_tablica
 
 
-def generate_sledztwo_data(num_of_sledztwa):
+def generate_sledztwo_data(num_of_sledztwa, statusy_sledztwa):
     sledztwa_tablica=[]
     ##tu tez sie pozbylam doatkowej tabeli
     yes_analizy = [analiza for analiza in analiza_data if analiza[1] == "yes"]
+
     for i in range(sledztwa_tablica):
         numer_sledztwa=i
-        id_analizy=random.randint(0, len(analiza_data)-1)
         #data_ropoczecia
         #data_zakoczenia
-        status_sledztwa=random.choice(possible_status_of_sledztwo)
+        ID_statusuSledztwa = random.choice(statusy_sledztwa)["id"]
         numer_odznaki=random.randint(10000, 99999)
-        sledztwa_tablica.append((numer_sledztwa,data_rozp,data_zako,status_sledztwa,id_analizy,numer_odznaki))
+        
+        sledztwa_tablica.append((numer_sledztwa,data_ropoczecia,data_zakoczenia,ID_statusuSledztwa,numer_odznaki))
+    
     return sledztwa_tablica
 
 def generate_czynnosc_data(num_of_czynnosci):
     czynnosci_tablica = []
+
     for i in range(num_of_czynnosci):
         id_czynnosci = i
-        # data = 
+        # c = 
         numerOdznaki = random.randint(10000, 99999)
-        czynnosci_tablica.append(id_czynnosci,data,numerOdznaki)
+        #foreign keys
+        #ID_analizyZgloszenia = 
+        #numer_sledztwa= 
+        czynnosci_tablica.append(id_czynnosci,ID_analizyZgloszenia,numerOdznaki,ID_analizyZgloszenia, numer_sledztwa)
     return czynnosci_tablica
 
-def generate_przesluchanie_data(num_przesluchanie,czynnosci_tablica):
+def generate_przesluchanie_data(num_przesluchanie,czynnosci_tablica,powody_przesluchania):
     przesluchania_tablica=[]
-    for i in range(przesluchania_tablica):
+
+    for i in range(przesluchania_tablica, miejsca_przesluchania):
         #losowanie krotki i jej usuniecie z tablicy
         wylosowana_czynnosc = czynnosci_tablica.pop(random.randrange(len(czynnosci_tablica)))
         id_czynnosci= wylosowana_czynnosc[0]
-
         godzina_przesluchania=fake.time()
-        lokalizacja_przesluchania=random.choice(possible_places_of_przesluchanie)
-        cel_przeslchania=random.choice(possible_purpose_of_hearing)
+        ID_lokalizacjiPrzesluchania=random.choice(miejsca_przesluchania)["id"]
+        cel_przeslchania=random.choice(powody_przesluchania)["id"]
         #id_osoby
-        przesluchania_tablica.append(id_czynnosci, godzina_przesluchania,lokalizacja_przesluchania,cel_przeslchania)
+        przesluchania_tablica.append(id_czynnosci, godzina_przesluchania,ID_lokalizacjiPrzesluchania,cel_przeslchania,id_osoby)
+    
     return przesluchania_tablica
 
-def generate_weryfikacjaInformacji_data(num_of_weryfikacjaInformacji, czynnosci_tablica):
+def generate_weryfikacjaInformacji_data(num_of_weryfikacjaInformacji, czynnosci_tablica,typy_priorytetow,wyniki_weryfikacji):
     weryfikacjaInformacji_tablica = []
     for i in range(num_of_weryfikacjaInformacji):
         #losowanie krotki i jej usuniecie z tablicy
         wylosowana_czynnosc = czynnosci_tablica.pop(random.randrange(len(czynnosci_tablica)))
         id_weryfikacjiInformacji = wylosowana_czynnosc[0]
         # a pozniej bedziemy generowac np 1. przesluhcanie i tam bedziemy wyrzucac z tablicy juz te id ktore zostaly wykrozystane i przekazywac do weryfikacji informacji itd 
-        priorytet = random.choice(possible_priorities)
-        # opis ?????
-        wynik = random.choice(possible_outcome_of_verification)
-        rodzaj = random.choice(possible_way_of_verification)
-        weryfikacjaInformacji_tablica.append(id_weryfikacjiInformacji, priorytet, opis, wynik, rodzaj)
+        ID_priorytetu = random.choice(typy_priorytetow)["id"]
+        opis = fake.text()
+        ID_wynikuWeryfikacji = random.choice(wyniki_weryfikacji)["id"]
+        ID_rodzajuWeryfikacji = random.choice(sposoby_weryfikacji)["id"]
+        weryfikacjaInformacji_tablica.append(id_weryfikacjiInformacji, ID_priorytetu, opis, ID_wynikuWeryfikacji, ID_rodzajuWeryfikacji)
+
     return weryfikacjaInformacji_tablica
 
 def generate_ogledzinyMiejscaZdarzenia_data(num_of_ogledzinyMiejscaZdarzenia, czynnosci_tablica):
     ogledzinyMiejscaZdarzenia_tablica = []
+
     for i in range(num_of_ogledzinyMiejscaZdarzenia):
         #losowanie krotki i jej usuniecie z tablicy
         wylosowana_czynnosc = czynnosci_tablica.pop(random.randrange(len(czynnosci_tablica)))
         id_ogledzinMiejscaZdarzenia = wylosowana_czynnosc[0]
         godzina = fake.time() # zastanowic sie czy nie dodac ze musi byc pozniej niz godzina zdarzenia i 
         adres = fake.address() # zostawiac tak czy pobierac miejsce zdarzenia
-        # przebieg = opisowka...
+        przebieg = fake.text()
         ogledzinyMiejscaZdarzenia_tablica.append(id_ogledzinMiejscaZdarzenia, godzina, adres, przebieg)
+    
     return ogledzinyMiejscaZdarzenia_tablica
 
 # funckcja pomocna w trakcie tworzenia materialow dowodowych zeby szybciej znalezc o ktorej czynnosci mowa, zeby moc przypisac jej dateZebrania
@@ -179,7 +207,7 @@ def znajdz_czynnosc_po_id(czynnosci_tablica, szukane_id):
 
 
 # najpierw przypisujemy KAZDEMU przesluchaniu dowod z rodzajem "zeznanie",a pozniej dla pozostalej liczby dowodow przypisujemy do ogledzin
-def generate_materialDowodowy_data(num_of_materialDowodowy, przesluchania, ogledzinyMiejscaZdarzenia, czynnosci_tablica):
+def generate_materialDowodowy_data(num_of_materialDowodowy, przesluchania, ogledzinyMiejscaZdarzenia, czynnosci_tablica, typy_materialow_dowodowych):
     materialDowodowy_tablica = []
     total_num_of_przesluchania = len(przesluchania)
     # zastanawia mnie jak tu bedzie pozniej wiadomo dla ktorego sledztwa jakie sa materialy dowodowe bo to jest w tej osobnej tablicy w bazie danych
@@ -196,15 +224,14 @@ def generate_materialDowodowy_data(num_of_materialDowodowy, przesluchania, ogled
         else:
             continue
 
-
         miejsceZebrania = przesluchanie[1]
+        # dla zeznania ID jest zawsze 0 (jest jako pierwsze)
         rodzaj = "zeznanie"
-        # raport = ...
-        materialDowodowy_tablica.append(ID_materialuDowodowego, dataZebrania, miejsceZebrania, raport, rodzaj, ID_czynnosci)
+        ID_rodzajuMaterialuDowodowego = 0
+        raport = fake.text()
+        materialDowodowy_tablica.append(ID_materialuDowodowego, dataZebrania, miejsceZebrania, raport, ID_rodzajuMaterialuDowodowego, ID_czynnosci)
     
     pozostala_num_of_dowody = num_of_materialDowodowy - total_num_of_przesluchania
-    
-    
     
     #jesli nadal są dostępne dowody, przypisujemy je do oględzin do tego momentu az bedzie ich 0
     while pozostala_num_of_dowody > 0:
@@ -222,9 +249,10 @@ def generate_materialDowodowy_data(num_of_materialDowodowy, przesluchania, ogled
 
         miejsceZebrania = ogledziny[2]
         # uwzgledniamy ze mozliwosci dla ogledzin sa wszystkie z wyjatkiem zeznania
-        rodzaj = random.choice([typ for typ in possible_type_od_material if typ != "zeznanie"])
-        # raport = ...
-        materialDowodowy_tablica.append(ID_materialuDowodowego, dataZebrania, miejsceZebrania, raport, rodzaj, ID_czynnosci)
+        ID_rodzajuMaterialuDowodowego = random.choice([typ for typ in typy_materialow_dowodowych if typ["name"] != "zeznanie"])["id"]
+        raport = fake.text()
+
+        materialDowodowy_tablica.append(ID_materialuDowodowego, dataZebrania, miejsceZebrania, raport, ID_rodzajuMaterialuDowodowego, ID_czynnosci)
         pozostala_num_of_dowody -= 1
     
     return materialDowodowy_tablica
@@ -258,14 +286,14 @@ def generate_zwiazany_z_data(sledztwa_dane,material_dowodowy_dane):
     return zwiazany_z_tablica
 
 #zostaw ta funkcje jesli faktycznie bedzie dodatkowa encja a jesli nie to odkomentuj w generate_materail linijke z id_czynnosci
-def generate_zabezpieczony_w_trakcie_data(materialy_dane,czynnosci_dane):
-    zabezpieczony_w_trakcie_tablica=[]
-    #przypisujemy dla kazdego materialu czynnosc przy ktorej zostal zabeczpiecozny
-    for i in range(len(materialy_dane)):
-        id_czynnosci=random.randint(0, len(czynnosci_dane)-1)
-        id_materialu=i
-        zabezpieczony_w_trakcie_tablica.append((id_czynnosci,id_materialu))
-    return zabezpieczony_w_trakcie_tablica
+# def generate_zabezpieczony_w_trakcie_data(materialy_dane,czynnosci_dane):
+#     zabezpieczony_w_trakcie_tablica=[]
+#     #przypisujemy dla kazdego materialu czynnosc przy ktorej zostal zabeczpiecozny
+#     for i in range(len(materialy_dane)):
+#         id_czynnosci=random.randint(0, len(czynnosci_dane)-1)
+#         id_materialu=i
+#         zabezpieczony_w_trakcie_tablica.append((id_czynnosci,id_materialu))
+#     return zabezpieczony_w_trakcie_tablica
 
         
 # generowanie mozliwych opcji dla "enumow"
@@ -279,6 +307,8 @@ typy_materialow_dowodowych = generate_possible_types_of_something(possible_type_
 typy_priorytetow = generate_possible_types_of_something(possible_priorities)
 wyniki_weryfikacji = generate_possible_types_of_something(possible_outcome_of_verification)
 sposoby_weryfikacji = generate_possible_types_of_something(possible_way_of_verification)
+
+
 
 
 zdarzenia=generate_zdarzenie_data_later(10)
