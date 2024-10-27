@@ -135,17 +135,34 @@ class Czynnosc(Base):
         'polymorphic_on': 'ID_czynnosci'
     }
 
+class LokalizacjaPrzesluchania(Base):
+    __tablename__ = 'hearing_location'
+
+    ID_lokalizacjiPrzesluchania = Column(Integer, primary_key=True, autoincrement=True)
+    nazwa = Column(NVARCHAR(100), nullable=False)
+
+    przesluchania = relationship("Przesluchanie", back_populates="lokalizacja")
+
+class CelPrzesluchania(Base):
+    __tablename__ = 'interrogation_purpose'
+
+    ID_celu = Column(Integer, primary_key=True, autoincrement=True)
+    nazwa = Column(NVARCHAR(10), nullable=False)
+
+    przesluchania = relationship("Przesluchanie", back_populates="cel")
 
 class Przesluchanie(Czynnosc):
     __tablename__ = 'interrogations'
 
     ID_przesluchania = Column(Integer, ForeignKey('operations.ID_czynnosci'), primary_key=True)  # Inherits ID from Czynnosc
     godzina = Column(DateTime, nullable=False)
-    lokalizacja = Column(NVARCHAR(100), nullable=False)
-    cel = Column(NVARCHAR(140), nullable=False)
+    ID_lokalizacji = Column(Integer, ForeignKey('hearing_location.ID_lokalizacjiPrzesluchania'), nullable=False)
+    ID_celu = Column(Integer, ForeignKey('interrogation_purpose.ID_celu'), nullable=False)
     ID_osoby = Column(Integer, nullable=False)
 
-    # Relationship can be added if necessary
+    lokalizacja = relationship("LokalizacjaPrzesluchania", back_populates="przesluchania")
+    cel = relationship("CelPrzesluchania", back_populates="przesluchania")
+
     czynnosc = relationship("Czynnosc", backref="interrogations")
 
     # Polymorphic identity for this subclass
@@ -170,6 +187,15 @@ class WynikWeryfikacji(Base):
     nazwa = Column(NVARCHAR(10), nullable=False)
     weryfikacje = relationship("WeryfikacjaInformacji", back_populates="wynik")
 
+class RodzajWeryfikacjiInformacji(Base):
+    __tablename__ = 'verification_type'
+
+    ID_rodzajuWeryfikacji = Column(Integer, primary_key=True, autoincrement=True)
+    nazwa = Column(NVARCHAR(200), nullable=False)
+
+    weryfikacje = relationship("WeryfikacjaInformacji", back_populates="rodzaj")
+
+
 class WeryfikacjaInformacji(Czynnosc):
     __tablename__ = 'information_verifications'
     #dziedziczy klucz glowny po Czynnosc
@@ -178,10 +204,11 @@ class WeryfikacjaInformacji(Czynnosc):
     ID_priorytetu = Column(Integer, ForeignKey('priority.ID_priorytetu'), nullable=False)
     opis = Column(NVARCHAR(200), nullable=False)
     ID_wynikuWeryfikacji = Column(Integer, ForeignKey('verification_outcome.ID_wynikuWeryfikacji'), nullable=False)
-    rodzaj = Column(NVARCHAR(200), nullable=False)
+    ID_rodzajuWeryfikacji = Column(Integer, ForeignKey('verification_type.ID_rodzajuWeryfikacji'), nullable=False)
 
     priorytet = relationship("Priorytet", back_populates="weryfikacje")
     wynik = relationship("WynikWeryfikacji", back_populates="weryfikacje")
+    rodzaj = relationship("RodzajWeryfikacjiInformacji", back_populates="weryfikacje")
 
     __mapper_args__ = {
         'polymorphic_identity': 'verification'
@@ -203,8 +230,8 @@ class OgledzinyMiejscaZdarzenia(Czynnosc):
 class ZwiazanyZ(Base):
     __tablename__ = 'connected_with'
 
-    ID_materialuDowodowego = Column(Integer, ForeignKey('evidence.ID_materialuDowodowego'), primary_key=True)
     numerSledztwa = Column(Integer, ForeignKey('investigations.numerSledztwa'), primary_key=True)
+    ID_materialuDowodowego = Column(Integer, ForeignKey('evidence.ID_materialuDowodowego'), primary_key=True)
    
     czynnosc = relationship("Czynnosc", backref="connected_material")
     dowod = relationship("MaterialDowodowy", backref="connected_with")
