@@ -83,7 +83,7 @@ def generate_zdarzenie_data(num_of_zdarzenie, typy_zdarzen, sledztwa):
             if random.random() < 0.65:  # 65% szans
                 numer_sledztwa = random.choice(sledztwa)[0]  # wybierz losowe sledztwo
             else:
-                numer_sledztwa = None  # brak przypisanego sledztwa
+                numer_sledztwa = -1  # brak przypisanego sledztwa
         
 
         zdarzenia_tablica.append((ID_zdarzenia, data_zdarzenia, ID_rodzajuZdarzenia, opis_zdarzenia, godzina_zdarzenia, adres_zdarzenia, numer_sledztwa))
@@ -478,10 +478,15 @@ sposoby_weryfikacji = generate_possible_types_of_something(possible_way_of_verif
 # 1. zdarzen musi byc > niz sledztw
 # 2. analiz musi byc > niz sledztw & musi byc tyle samo lub < co zgłoszeń
 
-sledztwa = generate_sledztwo_data(10, statusy_sledztwa)
-zdarzenia = generate_zdarzenie_data(20, typy_zdarzen, sledztwa)
-analizy_zgloszen = generate_analiza_data(50, sledztwa)
-czynnosci = generate_czynnosc_data(100, analizy_zgloszen, sledztwa)
+sledztwa = generate_sledztwo_data(1000, statusy_sledztwa)
+write_to_csv(sledztwa,"sledztwa.csv")
+print("sledztwa")
+zdarzenia = generate_zdarzenie_data(1100, typy_zdarzen, sledztwa)
+write_to_csv(zdarzenia,"zdarzenia.csv")
+analizy_zgloszen = generate_analiza_data(1100, sledztwa)
+write_to_csv(analizy_zgloszen,"analizy_zgloszen.csv")
+czynnosci = generate_czynnosc_data(1200, analizy_zgloszen, sledztwa)
+write_to_csv(czynnosci,"czynnosci.csv")
 
 liczba_czynnosci_do_analizy = 0
 liczba_czynnosci_do_sledztwa = 0
@@ -498,16 +503,16 @@ for czynnosci_item in czynnosci:
         liczba_czynnosci_do_sledztwa += 1
 
 
-
-
-
-
 przesluchania, ileZostajeCzynnosci = generate_przesluchanie_data(liczba_czynnosci_do_sledztwa, czynnosci, powody_przesluchania)
+write_to_csv(przesluchania,"przesluchania.csv")
 ogledzinyMiejscaZdarzenia = generate_ogledzinyMiejscaZdarzenia_data(ileZostajeCzynnosci,czynnosci)
-weryfikacjeInformacji = generate_weryfikacjaInformacji_data(liczba_czynnosci_do_analizy,czynnosci,typy_priorytetow,wyniki_weryfikacji)
-meterialyDowodowe = generate_materialDowodowy_data(150, przesluchania, ogledzinyMiejscaZdarzenia, czynnosci, typy_materialow_dowodowych)
-
-zwiazanyZ = generate_zwiazany_z_data(sledztwa,meterialyDowodowe,czynnosci)
+write_to_csv(ogledzinyMiejscaZdarzenia,"ogledziny.csv")
+#weryfikacjeInformacji = generate_weryfikacjaInformacji_data(liczba_czynnosci_do_analizy,czynnosci,typy_priorytetow,wyniki_weryfikacji)
+#write_to_csv(weryfikacjeInformacji,"weryfikacje.csv")
+#meterialyDowodowe = generate_materialDowodowy_data(150, przesluchania, ogledzinyMiejscaZdarzenia, czynnosci, typy_materialow_dowodowych)
+#write_to_csv(meterialyDowodowe,"materialy.csv")
+#zwiazanyZ = generate_zwiazany_z_data(sledztwa,meterialyDowodowe,czynnosci)
+#write_to_csv(zwiazanyZ,"zwiaznyz.csv")
 
 # tabela_sledztwa=generate_sledztwo_data(100,statusy_sledztwa)
 # write_to_csv(tabela_sledztwa,"sledztwa.csv")
