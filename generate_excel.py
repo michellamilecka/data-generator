@@ -106,8 +106,8 @@ def update_police_data_xlsx(file_path,number_new_records, probability=0.1, name_
                 if pd.isna(converted):
                     print(f"Invalid start date for badge {badge_number}: {service_start_date}")  # Debug
                     continue  # Skip this row if the date is invalid
-                
-                service_end_date = fake.date_between(start_date=converted, end_date=datetime.now())
+                start_date = datetime.now() - timedelta(days=365)
+                service_end_date = fake.date_between(start_date=start_date, end_date=datetime.now())
                 # Format service_end_date to the desired string format
                 existing_data.at[index, 'Data zakończenia służby'] = service_end_date.strftime("%d-%m-%Y") if service_end_date else None
         new_records = []
