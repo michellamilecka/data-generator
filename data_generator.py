@@ -14,6 +14,19 @@ chief_names=[]
 for i in range(1,number_of_stations+1):
     chief_names.append((i, fake.name()))
 
+def update_indices_of_new_data(oldData, newData):
+    zaktualizowane_indeksy_newData = []
+    ostatni_indeks = len(oldData)
+
+    for i in range(len(newData)):
+        newID = ostatni_indeks + i
+
+        zaktualizowane_dane = (newID,) + newData[i][1:]
+    
+        zaktualizowane_indeksy_newData.append(zaktualizowane_dane)
+
+    return zaktualizowane_indeksy_newData
+
 
 def generate_possible_types_of_something(possible_types_of_something):
     types_of_zdarzenia_something = []
@@ -65,10 +78,15 @@ possible_outcome_of_verification=["positive","negative","ambiguous"]
 
 possible_way_of_verification=["identity confirmation","confirmation of the existence of the place indicated by reporting person"]
 
-def generate_zdarzenie_data(num_of_zdarzenie, typy_zdarzen, sledztwa, T1orT2):
+def generate_zdarzenie_data(num_of_zdarzenie, typy_zdarzen, sledztwa, T1orT2,zdarzenie_t1):
     zdarzenia_tablica=[]
     num_of_sledztwa = len(sledztwa)
     sledztwa_przypisane = set()
+    if T1orT2=="T2":
+        for idx, zdarzenie in enumerate(zdarzenie_t1,):
+            ID_zdarzenia, data_zdarzenia, ID_rodzajuZdarzenia, opis_zdarzenia, godzina_zdarzenia, adres_zdarzenia, numer_sledztwa = zdarzenie
+            
+            ostatni_indeks=ID_zdarzenia+1
 
     for i in range(num_of_zdarzenie):
         if T1orT2 == "T1":
@@ -77,7 +95,10 @@ def generate_zdarzenie_data(num_of_zdarzenie, typy_zdarzen, sledztwa, T1orT2):
         else:
             start_date = datetime.now() - timedelta(days=365) # 1 rok temu  
             end_date = datetime.now() - timedelta(days=9*30) # 9 miesiecy temu
-        ID_zdarzenia=i 
+        if T1orT2 == "T1":
+            ID_zdarzenia=i
+        else:
+            ID_zdarzenia=ostatni_indeks
         data_zdarzenia = fake.date_between(start_date=start_date, end_date=end_date)
         ID_rodzajuZdarzenia=random.choice(typy_zdarzen)["id"] # nie mam pewnosci czy to tak zadziala
         opis_zdarzenia = "opis" # opisowe, dodac do append
@@ -94,13 +115,16 @@ def generate_zdarzenie_data(num_of_zdarzenie, typy_zdarzen, sledztwa, T1orT2):
                 numer_sledztwa = random.choice(sledztwa)[0]  # wybierz losowe sledztwo
             else:
                 numer_sledztwa = None  # brak przypisanego sledztwa
+             
         
 
         zdarzenia_tablica.append((ID_zdarzenia, data_zdarzenia, ID_rodzajuZdarzenia, opis_zdarzenia, godzina_zdarzenia, adres_zdarzenia, numer_sledztwa))
-    
+        if T1orT2=="T2":
+            ostatni_indeks=ostatni_indeks+1
+        
     return zdarzenia_tablica
 
-def generate_analiza_data(num_of_analizy, sledztwa):
+def generate_analiza_data(num_of_analizy, sledztwa,T1orT2,analiza_t1):
     analizy_tablica=[]
     num_of_sledztwa = len(sledztwa)
     min_true = num_of_sledztwa
@@ -113,12 +137,12 @@ def generate_analiza_data(num_of_analizy, sledztwa):
     # Użyte śledztwa
     used_sledztwa = set()
 
-
     for i in range(num_of_analizy):
         analiza_id=i
         rozpoczecieSledztwa_value = analiza_id in true_indices
 
         podstawy = "podstawy" if rozpoczecieSledztwa_value == True else "BRAK"
+        
 
         # foreign keys
         if rozpoczecieSledztwa_value:
@@ -133,7 +157,6 @@ def generate_analiza_data(num_of_analizy, sledztwa):
             numer_sledztwa = None  # Brak przypisania do sledztwa
         
         analizy_tablica.append((analiza_id,rozpoczecieSledztwa_value,podstawy, numer_sledztwa))
-        
     return analizy_tablica
 
 
@@ -503,6 +526,48 @@ def write_to_csv(data, filename):
         else:
             for item in data:
                 writer.writerow(item)
+def update_sledztwo(sledztwa_tablica,num_of_update):
+    for idx, sledztwo in enumerate(sledztwa_tablica,):
+        numer_sledztwa, data_ropoczecia, data_zakoczenia, status, numer_odznaki = sledztwo
+        
+        # Jeśli status to "w toku" i z prawdopodobieństwem 0.25
+        if status == 0 and random.random()<0.25:
+            # Zmieniamy status na "zamknięte" i dodajemy datę zakończenia
+            status = 2
+            one_year_ago = datetime.now() - timedelta(days=365)
+            data_zakoczenia = fake.date_between(start_date=one_year_ago, end_date='today').strftime("%Y-%m-%d")  # Ustawienie aktualnej daty zakończenia
+
+            # Aktualizujemy rekord w sledztwa_tablica
+            sledztwa_tablica[idx] = (numer_sledztwa, data_ropoczecia, data_zakoczenia, status, numer_odznaki)
+    ostatni_indeks=numer_sledztwa+1
+    
+    ##tu tez sie pozbylam doatkowej tabeli
+    #yes_analizy = [analiza for analiza in analiza_data if analiza[1] == "yes"]
+
+    start_date = datetime.now() - timedelta(days=7*30 + 10) # okolo 7 msc i 10 dni
+    end_date = start_date +timedelta(days=10) #okolo 7 msc
+
+    for i in range(num_of_update):
+        sledztwa2=[]
+        data_rozpoczecia = fake.date_between(start_date=start_date, end_date=end_date)
+        # Logika szans na datę zakończenia
+        if random.random() <= 0.15:  # 25% szans
+            data_zakonczenia = fake.date_between(start_date=data_rozpoczecia + timedelta(days=10), end_date=(datetime.now()-timedelta(days=1)))
+
+            dostepne_statusy = [status for status in statusy_sledztwa if status["id"] in [1, 2]]
+        else:
+            data_zakonczenia = None
+            dostepne_statusy = [status for status in statusy_sledztwa if status["id"] in [0, 4]]
+
+        # Wybieramy losowy status z dostępnych
+        ID_statusuSledztwa = random.choice(dostepne_statusy)["id"]
+        numer_odznaki=random.randint(10000, 10101)
+        sledztwa2.append((ostatni_indeks,data_rozpoczecia,data_zakonczenia,ID_statusuSledztwa,numer_odznaki))
+        sledztwa_tablica.append((ostatni_indeks,data_rozpoczecia,data_zakonczenia,ID_statusuSledztwa,numer_odznaki))
+        ostatni_indeks=ostatni_indeks+1
+
+    
+    return sledztwa_tablica,sledztwa2
 
 #zostaw ta funkcje jesli faktycznie bedzie dodatkowa encja a jesli nie to odkomentuj w generate_materail linijke z id_czynnosci
 # def generate_zabezpieczony_w_trakcie_data(materialy_dane,czynnosci_dane):
@@ -557,11 +622,12 @@ print("Śledztwa:")
 #     print(f"Numer śledztwa: {numer_sledztwa}, Data rozpoczęcia: {data_rozpoczecia}, Data zakończenia: {data_zakonczenia}")
 # print("-" * 40)
 write_to_csv(sledztwa,"sledztwa.csv")
-sledztwat2=generate_sledztwo_data(100,statusy_sledztwa,T2)
-sledztwa_updated=sledztwa+sledztwat2
+#sledztwat2=generate_sledztwo_data(100,statusy_sledztwa,T2)
+#sledztwa_updated=sledztwa+sledztwat2
+sledztwa_updated,sledztwa2=update_sledztwo(sledztwa,100)
 write_to_csv(sledztwa_updated,"sledztwa_update.csv")
 
-zdarzenia = generate_zdarzenie_data(1100, typy_zdarzen, sledztwa,T1)
+zdarzenia = generate_zdarzenie_data(1100, typy_zdarzen, sledztwa,T1,None)
 
 print("Zdarzenia:")
 # for zdarzenie in zdarzenia:
@@ -569,8 +635,11 @@ print("Zdarzenia:")
 #     print(f"ID zdarzenia: {ID_zdarzenia}, Data zdarzenia: {data_zdarzenia}, Numer śledztwa: {numer_sledztwa}")
 # print("-" * 40)
 write_to_csv(zdarzenia,"zdarzenia.csv")
+zdarzenia2=generate_zdarzenie_data(100,typy_zdarzen,sledztwa_updated,T2,zdarzenia)
+zdarzenia_updated=zdarzenia+zdarzenia2
+write_to_csv(zdarzenia_updated,"zdarzenia_update.csv")
 
-analizy_zgloszen = generate_analiza_data(1100, sledztwa)
+analizy_zgloszen = generate_analiza_data(1100, sledztwa,T1,None)
 
 print("Analizy zgłoszeń:")
 # for analiza in analizy_zgloszen:
@@ -578,11 +647,18 @@ print("Analizy zgłoszeń:")
 #     print(f"ID analizy: {analiza_id}, porzpoczecie czy nie: {rozpoczecieSledztwa_value}, Numer śledztwa: {numer_sledztwa}")
 # print("-" * 40)
 write_to_csv(analizy_zgloszen,"analizy_zgloszen.csv")
+analizy2=generate_analiza_data(100,sledztwa2,T2,analizy_zgloszen)
+analizy_updated=analizy_zgloszen+analizy2
+write_to_csv(analizy_updated,"analizy_updated.csv")
+
 
 zgloszenia=generate_zgloszenia_data(1100,zdarzenia,analizy_zgloszen,sposoby_zgloszenia)
 write_to_csv(zgloszenia,"zgloszenia.csv")
+zgloszenia2=generate_zgloszenia_data(100,zdarzenia2,analizy2,sposoby_zgloszenia)
+zgloszenia_update=zgloszenia+zgloszenia2
 print("zgloszenia")
 czynnosci = generate_czynnosc_data(10000, analizy_zgloszen, sledztwa,T1)
+
 
 print("Czynności:")
 # for czynność in czynnosci:
@@ -590,6 +666,8 @@ print("Czynności:")
 #     print(f"ID czynności: {id_czynnosci}, Data: {data}, Numer odznaki: {numerOdznaki}, ID analizy zgłoszenia: {ID_analizyZgloszenia}, Numer śledztwa: {numer_sledztwa}")
 # print("-" * 40)
 write_to_csv(czynnosci,"czynnosci.csv")
+czynnosci2=generate_czynnosc_data(11000,analizy_updated,sledztwa_updated,T2)
+czynnosci_updated=czynnosci+czynnosci2
 
 liczba_czynnosci_do_analizy = 0
 liczba_czynnosci_do_sledztwa = 0
