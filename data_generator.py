@@ -145,7 +145,7 @@ possible_outcome_of_verification=["positive","negative","ambiguous"]
 
 possible_way_of_verification=["identity confirmation","confirmation of the existence of the place indicated by reporting person"]
 
-def generate_zdarzenie_data(num_of_zdarzenie, typy_zdarzen, sledztwa, T1orT2):
+def generate_zdarzenie_data(num_of_zdarzenie, typy_zdarzen, sledztwa, T1orT2, opisy_zdarzen):
     zdarzenia_tablica=[]
     num_of_sledztwa = len(sledztwa)
     sledztwa_przypisane = set()
@@ -160,9 +160,9 @@ def generate_zdarzenie_data(num_of_zdarzenie, typy_zdarzen, sledztwa, T1orT2):
         ID_zdarzenia=i 
         data_zdarzenia = fake.date_between(start_date=start_date, end_date=end_date)
         ID_rodzajuZdarzenia=random.choice(typy_zdarzen)["id"] # nie mam pewnosci czy to tak zadziala
-        opis_zdarzenia = "opis" # opisowe, dodac do append
+        opis_zdarzenia = random.choice(opisy_zdarzen)["id"]
         godzina_zdarzenia=fake.time()
-        adres_zdarzenia="adres1"
+        adres_zdarzenia=fake.street_name()
         # foreign key
 
         if len(sledztwa_przypisane) < num_of_sledztwa:
@@ -180,7 +180,7 @@ def generate_zdarzenie_data(num_of_zdarzenie, typy_zdarzen, sledztwa, T1orT2):
     
     return zdarzenia_tablica
 
-def generate_analiza_data(num_of_analizy, sledztwa):
+def generate_analiza_data(num_of_analizy, sledztwa, podstawy_analizy):
     analizy_tablica=[]
     num_of_sledztwa = len(sledztwa)
     min_true = num_of_sledztwa
@@ -198,7 +198,12 @@ def generate_analiza_data(num_of_analizy, sledztwa):
         analiza_id=i
         rozpoczecieSledztwa_value = analiza_id in true_indices
 
-        podstawy = "podstawy" if rozpoczecieSledztwa_value == True else "BRAK"
+        if rozpoczecieSledztwa_value == True:
+        # Losujemy wartość z podstawy_analizy z wyłączeniem ostatniego elementu
+            podstawy = random.choice(podstawy_analizy[:-1])["id"]
+        else:
+            # Przypisujemy ostatnią opcję w tablicy
+            podstawy = podstawy_analizy[-1]["id"]
 
         # foreign keys
         if rozpoczecieSledztwa_value:
@@ -217,8 +222,7 @@ def generate_analiza_data(num_of_analizy, sledztwa):
     return analizy_tablica
 
 
-###############################################################################
-def generate_zgloszenia_data(num_of_zgloszenia, zdarzenia_data, analizy_tablica, sposoby_zgloszenia):
+def generate_zgloszenia_data(num_of_zgloszenia, zdarzenia_data, analizy_tablica, sposoby_zgloszenia, opisy_zgloszen):
     zgloszenia_tablica = []
     used_zdarzenia = set()  # Zestaw do śledzenia, które zdarzenia już były użyte
     used_analizy = set()    # Zestaw do śledzenia, które analizy zostały użyte
@@ -244,7 +248,7 @@ def generate_zgloszenia_data(num_of_zgloszenia, zdarzenia_data, analizy_tablica,
         data_z = zdarzenia_data[zdarzenie_index][1]  # Data zdarzenia
         end_date = data_z + timedelta(days=25)
         zgloszenie_data = fake.date_between(start_date=data_z, end_date=end_date)
-        opis = "opis"
+        opis = random.choice(opisy_zgloszen)["id"]
         
         osoby = pd.read_excel(r"C:\Users\miche\Desktop\STUDIA\V SEM\HURTOWNIE DANYCH\people_data.xlsx")
         filtered_osoby = osoby[osoby["Typ osoby"] == "Osoba zgłaszająca"]
@@ -322,6 +326,7 @@ def generate_sledztwo_data(num_of_sledztwa, statusy_sledztwa, T1orT2):
         sledztwa_tablica.append((numer_sledztwa,data_rozpoczecia,data_zakonczenia,ID_statusuSledztwa,numer_odznaki))
     
     return sledztwa_tablica
+
 def update_sledztwo(sledztwa_tablica):
     for idx, sledztwo in enumerate(sledztwa_tablica,):
         numer_sledztwa, data_ropoczecia, data_zakoczenia, status, numer_odznaki = sledztwo
@@ -472,7 +477,7 @@ def generate_przesluchanie_data(num_of_przesluchanie,czynnosci_tablica,powody_pr
     
     return przesluchania_tablica, ileZostaloCzynnosci, dostepne_czynnosci
 
-def generate_weryfikacjaInformacji_data(num_of_weryfikacjaInformacji, czynnosci_tablica,typy_priorytetow,wyniki_weryfikacji):
+def generate_weryfikacjaInformacji_data(num_of_weryfikacjaInformacji, czynnosci_tablica,typy_priorytetow,wyniki_weryfikacji, opisy_weryfikacji,sposoby_weryfikacji):
     weryfikacjaInformacji_tablica = []
     num_of_czynnosci = len(czynnosci_tablica)
     czynnosci_dla_analizy = [czynn for czynn in czynnosci_tablica if czynn[4] is None]
@@ -492,14 +497,14 @@ def generate_weryfikacjaInformacji_data(num_of_weryfikacjaInformacji, czynnosci_
             id_weryfikacjiInformacji = random.choice(czynnosci_dla_analizy)[0]
 
         ID_priorytetu = random.choice(typy_priorytetow)["id"]
-        opis = "opis"
+        opis = random.choice(opisy_weryfikacji)["id"]
         ID_wynikuWeryfikacji = random.choice(wyniki_weryfikacji)["id"]
         ID_rodzajuWeryfikacji = random.choice(sposoby_weryfikacji)["id"]
         weryfikacjaInformacji_tablica.append((id_weryfikacjiInformacji, ID_priorytetu, opis, ID_wynikuWeryfikacji, ID_rodzajuWeryfikacji))
 
     return weryfikacjaInformacji_tablica
 
-def generate_ogledzinyMiejscaZdarzenia_data(num_of_ogledzinyMiejscaZdarzenia, pozostaleCzynnosciSledztwo):
+def generate_ogledzinyMiejscaZdarzenia_data(num_of_ogledzinyMiejscaZdarzenia, pozostaleCzynnosciSledztwo,przebiegi_ogledzin):
     ogledzinyMiejscaZdarzenia_tablica = []
 
     for i in range(num_of_ogledzinyMiejscaZdarzenia):
@@ -511,8 +516,8 @@ def generate_ogledzinyMiejscaZdarzenia_data(num_of_ogledzinyMiejscaZdarzenia, po
         pozostaleCzynnosciSledztwo.remove(wylosowana_czynnosc)
 
         godzina = fake.time() # zastanowic sie czy nie dodac ze musi byc pozniej niz godzina zdarzenia i 
-        adres = "adres" # zostawiac tak czy pobierac miejsce zdarzenia
-        przebieg = "przebieg"
+        adres = fake.street_name() # zostawiac tak czy pobierac miejsce zdarzenia
+        przebieg = random.choice(przebiegi_ogledzin)["id"]
         ogledzinyMiejscaZdarzenia_tablica.append((id_ogledzinMiejscaZdarzenia, godzina, adres, przebieg))
     
     return ogledzinyMiejscaZdarzenia_tablica
@@ -526,7 +531,7 @@ def znajdz_czynnosc_po_id(czynnosci_tablica, szukane_id):
 
 
 # najpierw przypisujemy KAZDEMU przesluchaniu dowod z rodzajem "zeznanie",a pozniej dla pozostalej liczby dowodow przypisujemy do ogledzin
-def generate_materialDowodowy_data(num_of_materialDowodowy, przesluchania, ogledzinyMiejscaZdarzenia, czynnosci_tablica, typy_materialow_dowodowych):
+def generate_materialDowodowy_data(num_of_materialDowodowy, przesluchania, ogledzinyMiejscaZdarzenia, czynnosci_tablica, typy_materialow_dowodowych, raporty):
     materialDowodowy_tablica = []
     total_num_of_przesluchania = len(przesluchania)
     
@@ -547,7 +552,7 @@ def generate_materialDowodowy_data(num_of_materialDowodowy, przesluchania, ogled
         # dla zeznania ID jest zawsze 0 (jest jako pierwsze)
         rodzaj = "zeznanie"
         ID_rodzajuMaterialuDowodowego = 0
-        raport = "opis"
+        raport = random.choice(raporty)["id"]
         materialDowodowy_tablica.append((ID_materialuDowodowego, dataZebrania, miejsceZebrania, raport, ID_rodzajuMaterialuDowodowego, ID_czynnosci))
     
     pozostala_num_of_dowody = num_of_materialDowodowy - total_num_of_przesluchania
@@ -699,8 +704,8 @@ sledztwa2updated = update_indices_of_new_data(sledztwa,sledztwa2)
 sledztwa_updated=sledztwa+sledztwa2updated
 write_to_csv(sledztwa_updated,"sledztwa_update.csv")
 
-zdarzenia = generate_zdarzenie_data(1100, typy_zdarzen, sledztwa,T1)
-zdarzenia2 = generate_zdarzenie_data(100, typy_zdarzen, sledztwa2updated,T2)
+zdarzenia = generate_zdarzenie_data(1100, typy_zdarzen, sledztwa,T1,opisy_zdarzen)
+zdarzenia2 = generate_zdarzenie_data(100, typy_zdarzen, sledztwa2updated,T2,opisy_zdarzen)
 zdarzenia2updated = update_indices_of_new_data(zdarzenia,zdarzenia2)
 
 zdarzenia_updated = zdarzenia+zdarzenia2updated
@@ -713,8 +718,8 @@ print("Zdarzenia:")
 write_to_csv(zdarzenia,"zdarzenia.csv")
 write_to_csv(zdarzenia_updated,"zdarzenia_updated.csv")
 
-analizy_zgloszen = generate_analiza_data(1100, sledztwa)
-analizy_zgloszen2 = generate_analiza_data(100, sledztwa2updated)
+analizy_zgloszen = generate_analiza_data(1100, sledztwa,podstawy_rozpoczecia_sledztwa)
+analizy_zgloszen2 = generate_analiza_data(100, sledztwa2updated,podstawy_rozpoczecia_sledztwa)
 analizy_zgloszen2updated = update_indices_of_new_data(analizy_zgloszen,analizy_zgloszen2)
 analizy_updated = analizy_zgloszen + analizy_zgloszen2updated
 
@@ -726,9 +731,9 @@ print("Analizy zgłoszeń:")
 write_to_csv(analizy_zgloszen,"analizy_zgloszen.csv")
 write_to_csv(analizy_updated,"analizy_updated.csv")
 
-zgloszenia = generate_zgloszenia_data(1000,zdarzenia,analizy_zgloszen,sposoby_zgloszenia)
+zgloszenia = generate_zgloszenia_data(1000,zdarzenia,analizy_zgloszen,sposoby_zgloszenia,opisy_zgloszen)
 print("zgloszenie1")
-zgloszenia2 = generate_zgloszenia_data(100,zdarzenia2updated,analizy_zgloszen2updated,sposoby_zgloszenia)
+zgloszenia2 = generate_zgloszenia_data(100,zdarzenia2updated,analizy_zgloszen2updated,sposoby_zgloszenia,opisy_zgloszen)
 print("zgloszenie2")
 
 zgloszenia2updated = update_indices_of_new_data(zgloszenia,zgloszenia2)
@@ -796,8 +801,8 @@ write_to_csv(przesluchania,"przesluchania.csv")
 write_to_csv(przesluchania_updated,"przesluchania_updated.csv")
 
 
-ogledzinyMiejscaZdarzenia = generate_ogledzinyMiejscaZdarzenia_data(ileZostajeCzynnosci,pozostaleCzynnosciSledztwo)
-ogledzinyMiejscaZdarzenia2 = generate_ogledzinyMiejscaZdarzenia_data(ileZostajeCzynnosci2,pozostaleCzynnosciSledztwo2)
+ogledzinyMiejscaZdarzenia = generate_ogledzinyMiejscaZdarzenia_data(ileZostajeCzynnosci,pozostaleCzynnosciSledztwo,przebiegi_ogledzin)
+ogledzinyMiejscaZdarzenia2 = generate_ogledzinyMiejscaZdarzenia_data(ileZostajeCzynnosci2,pozostaleCzynnosciSledztwo2,przebiegi_ogledzin)
 #ogledzinyMiejscaZdarzenia2updated = update_indices_of_new_data(ogledzinyMiejscaZdarzenia,ogledzinyMiejscaZdarzenia2)
 updated_ogledziny = ogledzinyMiejscaZdarzenia + ogledzinyMiejscaZdarzenia2
 
@@ -809,8 +814,8 @@ print("Oględziny miejsca zdarzenia:")
 write_to_csv(ogledzinyMiejscaZdarzenia,"ogledziny.csv")
 write_to_csv(updated_ogledziny,"ogledziny_updated.csv")
 
-weryfikacjeInformacji = generate_weryfikacjaInformacji_data(liczba_czynnosci_do_analizy,czynnosci,typy_priorytetow,wyniki_weryfikacji)
-weryfikacjeInformacji2 = generate_weryfikacjaInformacji_data(liczba_czynnosci_do_analizy2,czynnosci2updated,typy_priorytetow,wyniki_weryfikacji)
+weryfikacjeInformacji = generate_weryfikacjaInformacji_data(liczba_czynnosci_do_analizy,czynnosci,typy_priorytetow,wyniki_weryfikacji,opisy_weryfikacji,sposoby_weryfikacji)
+weryfikacjeInformacji2 = generate_weryfikacjaInformacji_data(liczba_czynnosci_do_analizy2,czynnosci2updated,typy_priorytetow,wyniki_weryfikacji,opisy_weryfikacji,sposoby_weryfikacji)
 #weryfikacjeInformacji2updated = update_indices_of_new_data(weryfikacjeInformacji,weryfikacjeInformacji2)
 updated_weryfikacje = weryfikacjeInformacji+weryfikacjeInformacji2
 
@@ -823,13 +828,13 @@ write_to_csv(weryfikacjeInformacji,"weryfikacje.csv")
 write_to_csv(updated_weryfikacje,"weryfikacje_updated.csv")
 
 
-materialyDowodowe = generate_materialDowodowy_data(6000, przesluchania, ogledzinyMiejscaZdarzenia, czynnosci, typy_materialow_dowodowych)
+materialyDowodowe = generate_materialDowodowy_data(6000, przesluchania, ogledzinyMiejscaZdarzenia, czynnosci, typy_materialow_dowodowych,raporty)
 print("Materiały dowodowe:")
 for material in materialyDowodowe:
     ID_materialuDowodowego, dataZebrania, miejsceZebrania, raport, ID_rodzajuMaterialuDowodowego, ID_czynnosci = material
     print(f"ID materiału: {ID_materialuDowodowego}, ID czynności: {ID_czynnosci}")
 print("-" * 40)
-materialyDowodowe2 = generate_materialDowodowy_data(1800, przesluchania2, ogledzinyMiejscaZdarzenia2, czynnosci2updated, typy_materialow_dowodowych)
+materialyDowodowe2 = generate_materialDowodowy_data(1800, przesluchania2, ogledzinyMiejscaZdarzenia2, czynnosci2updated, typy_materialow_dowodowych,raporty)
 materialyDowodowe2updated = update_indices_of_new_data(materialyDowodowe,materialyDowodowe2)
 materialy_updated = materialyDowodowe+materialyDowodowe2updated
 
