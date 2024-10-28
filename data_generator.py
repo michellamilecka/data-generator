@@ -26,6 +26,13 @@ def generate_possible_types_of_something(possible_types_of_something):
     
     return types_of_zdarzenia_something
 
+def save_to_csv(data, filename="output.csv"):
+    # Convert the list of dictionaries to a DataFrame
+    df = pd.DataFrame(data)
+    # Save the DataFrame to a CSV file
+    df.to_csv(filename, index=False)
+    print(f"Data saved to {filename}")
+
 possible_types_of_zdarzenia = [
     "theft", 
     "kidnapping", 
@@ -73,9 +80,9 @@ def generate_zdarzenie_data(num_of_zdarzenie, typy_zdarzen, sledztwa, T1orT2):
         ID_zdarzenia=i 
         data_zdarzenia = fake.date_between(start_date=start_date, end_date=end_date)
         ID_rodzajuZdarzenia=random.choice(typy_zdarzen)["id"] # nie mam pewnosci czy to tak zadziala
-        opis_zdarzenia = fake.text() # opisowe, dodac do append
+        opis_zdarzenia = "opis" # opisowe, dodac do append
         godzina_zdarzenia=fake.time()
-        adres_zdarzenia=fake.address()
+        adres_zdarzenia="adres1"
         # foreign key
 
         if len(sledztwa_przypisane) < num_of_sledztwa:
@@ -111,7 +118,7 @@ def generate_analiza_data(num_of_analizy, sledztwa):
         analiza_id=i
         rozpoczecieSledztwa_value = analiza_id in true_indices
 
-        podstawy = fake.text() if rozpoczecieSledztwa_value == True else "BRAK"
+        podstawy = "podstawy" if rozpoczecieSledztwa_value == True else "BRAK"
 
         # foreign keys
         if rozpoczecieSledztwa_value:
@@ -152,7 +159,7 @@ def generate_zgloszenia_data(num_of_zgloszenia, zdarzenia_data, analizy_tablica,
         data_z = zdarzenia_data[id_zdarzenia][1]  # Data zdarzenia
         end_date = data_z + timedelta(days=25)
         zgloszenie_data = fake.date_between(start_date=data_z, end_date=end_date)
-        opis = fake.text()
+        opis = "opis"
         
         osoby = pd.read_excel(r"C:\Users\miche\Desktop\STUDIA\V SEM\HURTOWNIE DANYCH\people_data.xlsx")
         filtered_osoby = osoby[osoby["Typ osoby"] == "Osoba zgłaszająca"]
@@ -160,7 +167,7 @@ def generate_zgloszenia_data(num_of_zgloszenia, zdarzenia_data, analizy_tablica,
         id_osoby_list = [record["ID osoby"] for record in id_osob_zglaszajaych]
         id_osoby = random.choice(id_osoby_list)
 
-        numer_odznaki = random.randint(10000, 10100)
+        numer_odznaki = random.randint(10000, 10099)
         policjanci=pd.read_excel(r"C:\Users\miche\Desktop\STUDIA\V SEM\HURTOWNIE DANYCH\police_data_time1.xlsx")
         filtered_policjanci = policjanci[policjanci["Numer odznaki"] == numer_odznaki]
         id_policjantow = filtered_policjanci.to_dict(orient='records')
@@ -202,7 +209,7 @@ def generate_sledztwo_data(num_of_sledztwa, statusy_sledztwa, T1orT2):
         end_date = start_date +timedelta(days=10)
     else:
         start_date = datetime.now() - timedelta(days=7*30 + 10) # okolo 7 msc i 10 dni
-        end_date = start_date +timedelta(days=7*30) #okolo 7 msc
+        end_date = start_date +timedelta(days=10) #okolo 7 msc
 
     
     ##tu tez sie pozbylam doatkowej tabeli
@@ -213,7 +220,11 @@ def generate_sledztwo_data(num_of_sledztwa, statusy_sledztwa, T1orT2):
         data_rozpoczecia = fake.date_between(start_date=start_date, end_date=end_date)
         # Logika szans na datę zakończenia
         if random.random() <= 0.25:  # 25% szans
-            data_zakonczenia = fake.date_between(start_date=data_rozpoczecia + timedelta(days=10), end_date=(datetime.now()-timedelta(days=365)))
+            if T1orT2 == "T1":
+                data_zakonczenia = fake.date_between(start_date=data_rozpoczecia + timedelta(days=10), end_date=(datetime.now()-timedelta(days=365)))
+            else:
+                data_zakonczenia = fake.date_between(start_date=data_rozpoczecia + timedelta(days=10), end_date=(datetime.now()-timedelta(days=1)))
+
             dostepne_statusy = [status for status in statusy_sledztwa if status["id"] in [1, 2]]
         else:
             data_zakonczenia = None
@@ -327,7 +338,8 @@ def generate_czynnosc_data(num_of_czynnosci, analizy_tablica, sledztwa, T1orT2):
 
 def generate_przesluchanie_data(num_of_przesluchanie,czynnosci_tablica,powody_przesluchania):
     przesluchania_tablica=[]
-    liczba_przesluchan_wylosowana = random.randint(1, num_of_przesluchanie)
+    ##liczba_zaokraglona=floor(num_of_przesluchanie-)
+    liczba_przesluchan_wylosowana = random.randint(1, num_of_przesluchanie-1000)
     ileZostaloCzynnosci = num_of_przesluchanie-liczba_przesluchan_wylosowana
     dostepne_czynnosci = [czynn for czynn in czynnosci_tablica if czynn[4] is not None]
 
@@ -375,7 +387,7 @@ def generate_weryfikacjaInformacji_data(num_of_weryfikacjaInformacji, czynnosci_
             id_weryfikacjiInformacji = random.choice(czynnosci_dla_analizy)[0]
 
         ID_priorytetu = random.choice(typy_priorytetow)["id"]
-        opis = fake.text()
+        opis = "opis"
         ID_wynikuWeryfikacji = random.choice(wyniki_weryfikacji)["id"]
         ID_rodzajuWeryfikacji = random.choice(sposoby_weryfikacji)["id"]
         weryfikacjaInformacji_tablica.append((id_weryfikacjiInformacji, ID_priorytetu, opis, ID_wynikuWeryfikacji, ID_rodzajuWeryfikacji))
@@ -394,8 +406,8 @@ def generate_ogledzinyMiejscaZdarzenia_data(num_of_ogledzinyMiejscaZdarzenia, po
         pozostaleCzynnosciSledztwo.remove(wylosowana_czynnosc)
 
         godzina = fake.time() # zastanowic sie czy nie dodac ze musi byc pozniej niz godzina zdarzenia i 
-        adres = fake.address() # zostawiac tak czy pobierac miejsce zdarzenia
-        przebieg = fake.text()
+        adres = "adres" # zostawiac tak czy pobierac miejsce zdarzenia
+        przebieg = "przebieg"
         ogledzinyMiejscaZdarzenia_tablica.append((id_ogledzinMiejscaZdarzenia, godzina, adres, przebieg))
     
     return ogledzinyMiejscaZdarzenia_tablica
@@ -431,7 +443,7 @@ def generate_materialDowodowy_data(num_of_materialDowodowy, przesluchania, ogled
         # dla zeznania ID jest zawsze 0 (jest jako pierwsze)
         rodzaj = "zeznanie"
         ID_rodzajuMaterialuDowodowego = 0
-        raport = fake.text()
+        raport = "opis"
         materialDowodowy_tablica.append((ID_materialuDowodowego, dataZebrania, miejsceZebrania, raport, ID_rodzajuMaterialuDowodowego, ID_czynnosci))
     
     pozostala_num_of_dowody = num_of_materialDowodowy - total_num_of_przesluchania
@@ -453,7 +465,7 @@ def generate_materialDowodowy_data(num_of_materialDowodowy, przesluchania, ogled
         miejsceZebrania = ogledziny[2]
         # uwzgledniamy ze mozliwosci dla ogledzin sa wszystkie z wyjatkiem zeznania
         ID_rodzajuMaterialuDowodowego = random.choice([typ for typ in typy_materialow_dowodowych if typ["name"] != "zeznanie"])["id"]
-        raport = fake.text()
+        raport = "raport"
 
         materialDowodowy_tablica.append((ID_materialuDowodowego, dataZebrania, miejsceZebrania, raport, ID_rodzajuMaterialuDowodowego, ID_czynnosci))
         pozostala_num_of_dowody -= 1
@@ -506,14 +518,30 @@ def write_to_csv(data, filename):
 # generowanie mozliwych opcji dla "enumow"
 
 typy_zdarzen = generate_possible_types_of_something(possible_types_of_zdarzenia)
+save_to_csv(typy_zdarzen,"typy_zdarzen.csv")
 sposoby_zgloszenia = generate_possible_types_of_something(possible_ways_of_zdarzenie)
+save_to_csv(sposoby_zgloszenia,"sposoby_zgloszenia.csv")
+
 miejsca_przesluchania = generate_possible_types_of_something(possible_places_of_przesluchanie)
+save_to_csv(miejsca_przesluchania,"miejsca_przesluchania.csv")
+
 powody_przesluchania = generate_possible_types_of_something(possible_purpose_of_hearing)
+save_to_csv(powody_przesluchania,"powody_przesluchania.csv")
+
 statusy_sledztwa = generate_possible_types_of_something(possible_status_of_sledztwo)
+save_to_csv(statusy_sledztwa,"statusy_sledztwa.csv")
+
 typy_materialow_dowodowych = generate_possible_types_of_something(possible_type_od_material)
+save_to_csv(typy_materialow_dowodowych,"typy_materialow_dowodowych.csv")
+
 typy_priorytetow = generate_possible_types_of_something(possible_priorities)
+save_to_csv(typy_priorytetow,"typy_priorytetow.csv")
+
 wyniki_weryfikacji = generate_possible_types_of_something(possible_outcome_of_verification)
+save_to_csv(wyniki_weryfikacji,"wyniki_weryfikacji.csv")
+
 sposoby_weryfikacji = generate_possible_types_of_something(possible_way_of_verification)
+save_to_csv(sposoby_weryfikacji,"sposoby_weryfikacji.csv")
 
 T1 = "T1"
 T2 = "T2"
@@ -521,37 +549,47 @@ T2 = "T2"
 # 1. zdarzen musi byc > niz sledztw
 # 2. analiz musi byc > niz sledztw & musi byc tyle samo lub < co zgłoszeń
 
-sledztwa = generate_sledztwo_data(10, statusy_sledztwa,T1)
+sledztwa = generate_sledztwo_data(1000, statusy_sledztwa,T1)
 
 print("Śledztwa:")
-for sledztwo in sledztwa:
-    numer_sledztwa, data_rozpoczecia, data_zakonczenia, ID_statusuSledztwa, numer_odznaki = sledztwo
-    print(f"Numer śledztwa: {numer_sledztwa}, Data rozpoczęcia: {data_rozpoczecia}, Data zakończenia: {data_zakonczenia}")
-print("-" * 40)
+# for sledztwo in sledztwa:
+#     numer_sledztwa, data_rozpoczecia, data_zakonczenia, ID_statusuSledztwa, numer_odznaki = sledztwo
+#     print(f"Numer śledztwa: {numer_sledztwa}, Data rozpoczęcia: {data_rozpoczecia}, Data zakończenia: {data_zakonczenia}")
+# print("-" * 40)
+write_to_csv(sledztwa,"sledztwa.csv")
+sledztwat2=generate_sledztwo_data(100,statusy_sledztwa,T2)
+sledztwa_updated=sledztwa+sledztwat2
+write_to_csv(sledztwa_updated,"sledztwa_update.csv")
 
-zdarzenia = generate_zdarzenie_data(12, typy_zdarzen, sledztwa,T1)
+zdarzenia = generate_zdarzenie_data(1100, typy_zdarzen, sledztwa,T1)
 
 print("Zdarzenia:")
-for zdarzenie in zdarzenia:
-    ID_zdarzenia, data_zdarzenia, ID_rodzajuZdarzenia, opis_zdarzenia, godzina_zdarzenia, adres_zdarzenia, numer_sledztwa = zdarzenie
-    print(f"ID zdarzenia: {ID_zdarzenia}, Data zdarzenia: {data_zdarzenia}, Numer śledztwa: {numer_sledztwa}")
-print("-" * 40)
+# for zdarzenie in zdarzenia:
+#     ID_zdarzenia, data_zdarzenia, ID_rodzajuZdarzenia, opis_zdarzenia, godzina_zdarzenia, adres_zdarzenia, numer_sledztwa = zdarzenie
+#     print(f"ID zdarzenia: {ID_zdarzenia}, Data zdarzenia: {data_zdarzenia}, Numer śledztwa: {numer_sledztwa}")
+# print("-" * 40)
+write_to_csv(zdarzenia,"zdarzenia.csv")
 
-analizy_zgloszen = generate_analiza_data(20, sledztwa)
+analizy_zgloszen = generate_analiza_data(1100, sledztwa)
 
 print("Analizy zgłoszeń:")
-for analiza in analizy_zgloszen:
-    analiza_id,rozpoczecieSledztwa_value,podstawy, numer_sledztwa = analiza
-    print(f"ID analizy: {analiza_id}, porzpoczecie czy nie: {rozpoczecieSledztwa_value}, Numer śledztwa: {numer_sledztwa}")
-print("-" * 40)
+# for analiza in analizy_zgloszen:
+#     analiza_id,rozpoczecieSledztwa_value,podstawy, numer_sledztwa = analiza
+#     print(f"ID analizy: {analiza_id}, porzpoczecie czy nie: {rozpoczecieSledztwa_value}, Numer śledztwa: {numer_sledztwa}")
+# print("-" * 40)
+write_to_csv(analizy_zgloszen,"analizy_zgloszen.csv")
 
-czynnosci = generate_czynnosc_data(50, analizy_zgloszen, sledztwa,T1)
+zgloszenia=generate_zgloszenia_data(1100,zdarzenia,analizy_zgloszen,sposoby_zgloszenia)
+write_to_csv(zgloszenia,"zgloszenia.csv")
+print("zgloszenia")
+czynnosci = generate_czynnosc_data(10000, analizy_zgloszen, sledztwa,T1)
 
 print("Czynności:")
-for czynność in czynnosci:
-    id_czynnosci, data, numerOdznaki, ID_analizyZgloszenia, numer_sledztwa = czynność
-    print(f"ID czynności: {id_czynnosci}, Data: {data}, Numer odznaki: {numerOdznaki}, ID analizy zgłoszenia: {ID_analizyZgloszenia}, Numer śledztwa: {numer_sledztwa}")
-print("-" * 40)
+# for czynność in czynnosci:
+#     id_czynnosci, data, numerOdznaki, ID_analizyZgloszenia, numer_sledztwa = czynność
+#     print(f"ID czynności: {id_czynnosci}, Data: {data}, Numer odznaki: {numerOdznaki}, ID analizy zgłoszenia: {ID_analizyZgloszenia}, Numer śledztwa: {numer_sledztwa}")
+# print("-" * 40)
+write_to_csv(czynnosci,"czynnosci.csv")
 
 liczba_czynnosci_do_analizy = 0
 liczba_czynnosci_do_sledztwa = 0
@@ -574,41 +612,44 @@ print(f"LICZBA CZYNNOSCI DO SLEDZTWA: {liczba_czynnosci_do_sledztwa}")
 przesluchania, ileZostajeCzynnosci, pozostaleCzynnosciSledztwo = generate_przesluchanie_data(liczba_czynnosci_do_sledztwa, czynnosci, powody_przesluchania)
 
 print("Przesłuchania:")
-for przesluchanie in przesluchania:
-    id_przesluchania, numer_sledztwa, data_przesluchania, ID_policjanta, opis = przesluchanie
-    print(f"ID przesłuchania: {id_przesluchania}, Numer śledztwa: {numer_sledztwa}, Data przesłuchania: {data_przesluchania}, ID policjanta: {ID_policjanta}, Opis: {opis}")
-print("-" * 40)
+# for przesluchanie in przesluchania:
+#     id_przesluchania, numer_sledztwa, data_przesluchania, ID_policjanta, opis = przesluchanie
+#     print(f"ID przesłuchania: {id_przesluchania}, Numer śledztwa: {numer_sledztwa}, Data przesłuchania: {data_przesluchania}, ID policjanta: {ID_policjanta}, Opis: {opis}")
+# print("-" * 40)
+write_to_csv(przesluchania,"przesluchania.csv")
 
 ogledzinyMiejscaZdarzenia = generate_ogledzinyMiejscaZdarzenia_data(ileZostajeCzynnosci,pozostaleCzynnosciSledztwo)
 
 print("Oględziny miejsca zdarzenia:")
-for ogledziny in ogledzinyMiejscaZdarzenia:
-    id_ogledzinMiejscaZdarzenia, godzina, adres, przebieg = ogledziny
-    print(f"ID oględzin: {id_ogledzinMiejscaZdarzenia}")
-print("-" * 40)
-
+# for ogledziny in ogledzinyMiejscaZdarzenia:
+#     id_ogledzinMiejscaZdarzenia, godzina, adres, przebieg = ogledziny
+#     print(f"ID oględzin: {id_ogledzinMiejscaZdarzenia}")
+# print("-" * 40)
+write_to_csv(ogledzinyMiejscaZdarzenia,"ogledziny.csv")
 weryfikacjeInformacji = generate_weryfikacjaInformacji_data(liczba_czynnosci_do_analizy,czynnosci,typy_priorytetow,wyniki_weryfikacji)
 
 print("Weryfikacje informacji:")
-for weryfikacja in weryfikacjeInformacji:
-    id_weryfikacjiInformacji, ID_priorytetu, opis, ID_wynikuWeryfikacji, ID_rodzajuWeryfikacji = weryfikacja
-    print(f"ID weryfikacji: {id_weryfikacjiInformacji}")
-print("-" * 40)
+# for weryfikacja in weryfikacjeInformacji:
+#     id_weryfikacjiInformacji, ID_priorytetu, opis, ID_wynikuWeryfikacji, ID_rodzajuWeryfikacji = weryfikacja
+#     print(f"ID weryfikacji: {id_weryfikacjiInformacji}")
+# print("-" * 40)
+write_to_csv(weryfikacjeInformacji,"weryfikacje.csv")
 
 materialyDowodowe = generate_materialDowodowy_data(200, przesluchania, ogledzinyMiejscaZdarzenia, czynnosci, typy_materialow_dowodowych)
 
 print("Materiały dowodowe:")
-for material in materialyDowodowe:
-    ID_materialuDowodowego, dataZebrania, miejsceZebrania, raport, ID_rodzajuMaterialuDowodowego, ID_czynnosci = material
-    print(f"ID materiału: {ID_materialuDowodowego}, ID czynności: {ID_czynnosci}")
-print("-" * 40)
+# for material in materialyDowodowe:
+#     ID_materialuDowodowego, dataZebrania, miejsceZebrania, raport, ID_rodzajuMaterialuDowodowego, ID_czynnosci = material
+#     print(f"ID materiału: {ID_materialuDowodowego}, ID czynności: {ID_czynnosci}")
+# print("-" * 40)
+write_to_csv(materialyDowodowe,"materialy.csv")
 
 zwiazanyZ = generate_zwiazany_z_data(sledztwa,materialyDowodowe,czynnosci)
 for zwiaz in zwiazanyZ:
     ID_sledztwa, ID_materialuDowodowego = zwiaz
-    print(f"ID materiału: {ID_materialuDowodowego}, ID sledztwa: {ID_sledztwa}")
-print("-" * 40)
-#write_to_csv(zwiazanyZ,"zwiaznyz.csv")
+    ##print(f"ID materiału: {ID_materialuDowodowego}, ID sledztwa: {ID_sledztwa}")
+##print("-" * 40)
+write_to_csv(zwiazanyZ,"zwiaznyz.csv")
 
 # tabela_sledztwa=generate_sledztwo_data(100,statusy_sledztwa)
 # write_to_csv(tabela_sledztwa,"sledztwa.csv")
